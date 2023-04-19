@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "kg-llm-interface"
+version = "0.1.0"
+description = "Langchain-powered natural language interface to RDF knowledge-graphs"
+authors = ["cyril.matthey-doret <cyril.matthey-doret@epfl.ch>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "kg_llm_interface"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+rdflib = "^6.3.2"
+metaflow = "^2.8.3"
+langchain = "^0.0.144"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+pytest = "^7.3.1"
+pre-commit = "^3.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
