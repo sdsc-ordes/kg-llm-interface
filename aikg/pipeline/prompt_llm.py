@@ -37,27 +37,29 @@ class PromptFlow(FlowSpec):
         self.model_id = config["model_id"]
         self.prompt_template = config["prompt_template"]
 
+        self.next(self.make_prompt)
+
+    @step
+    def make_prompt(self):
+        """Make the prompt template"""
+        # Detect input {variables} from template
+        variables = re.findall(r"{(\w+)}", self.prompt_template)
+        self.prompt = PromptTemplate(
+            template=self.prompt_template, input_variables=variables
+        )
         self.next(self.setup_llm)
 
     @step
     def setup_llm(self):
-        """Instantiate the LLM and prompt template."""
-        # Detect input {variables} from template
-        variables = re.findall(r"{(\w+)}", self.prompt_template)
-        prompt = PromptTemplate(
-            template=self.prompt_template, input_variables=variables
-        )
+        """Instantiate the LLM."""
 
-        print("Loading started")
         # Verbose is required to pass to the callback manager
         llm = HuggingFacePipeline.from_model_id(
-            model_id="bigscience/bloom-1b7",
+            model_id=self.model_id,
             task="text-generation",
             verbose=True,
         )
-        print("Loaded")
-        self.llm_chain = LLMChain(prompt=prompt, llm=llm, verbose=True)
-        print("Chain ready")
+        self.llm_chain = LLMChain(prompt=self.prompt, llm=llm)
         self.next(self.ask_question)
 
     @step
