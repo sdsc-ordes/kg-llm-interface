@@ -12,8 +12,8 @@ make install
 ## Usage
 
 The repository contains a [metaflow](https://metaflow.org/) to orchestrate pipelines.
-The pipelines are defined in `src/pipelines` and can be executed with `python src/pipelines/<pipeline>.py run`.
+The pipelines are defined in [src/pipelines](src/pipelines) and can be executed with `python src/pipelines/<pipeline>.py run`.
 
 ## Pipelines
 
-* `prompt_llm.py`: Prompt a language model with an input question.
+* [prompt_llm.py](src/pipelines/prompt_llm.py): Prompt a language model with an input question.
