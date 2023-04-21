@@ -14,6 +14,9 @@ metaflow = "^2.8.3"
 langchain = "^0.0.146"
 pyllamacpp = "^1.0.6"
 tqdm = "^4.65.0"
+llama-cpp-python = "^0.1.35"
+transformers = "^4.28.1"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

@@ -1,7 +1,9 @@
 import re
+from dotenv import load_dotenv
 from pathlib import Path
 from langchain import PromptTemplate, LLMChain
-from langchain.llms import GPT4All
+from langchain import HuggingFacePipeline
+from langchain.llms import GPT4All, LlamaCpp
 from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from metaflow import FlowSpec, IncludeFile, step, Parameter
@@ -28,42 +30,40 @@ class PromptFlow(FlowSpec):
 
     @step
     def start(self):
+        """Initialize config values"""
         import yaml
 
         config = yaml.safe_load(self.config)
-        self.model_url = config["model_url"]
-        self.model_path = Path(config["model_path"])
+        self.model_id = config["model_id"]
         self.prompt_template = config["prompt_template"]
 
-        self.next(self.download_model)
-
-    @step
-    def download_model(self):
-        if not self.model_path.exists():
-            download_file(self.model_url, self.model_path)
         self.next(self.setup_llm)
 
     @step
     def setup_llm(self):
+        """Instantiate the LLM and prompt template."""
         # Detect input {variables} from template
         variables = re.findall(r"{(\w+)}", self.prompt_template)
         prompt = PromptTemplate(
             template=self.prompt_template, input_variables=variables
         )
 
-        # Callbacks support token-wise streaming
-        callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-
+        print("Loading started")
         # Verbose is required to pass to the callback manager
-        llm = GPT4All(
-            model=self.model_path, callback_manager=callback_manager, verbose=True
+        llm = HuggingFacePipeline.from_model_id(
+            model_id="bigscience/bloom-1b7",
+            task="text-generation",
+            verbose=True,
         )
-        self.llm_chain = LLMChain(prompt=prompt, llm=llm)
+        print("Loaded")
+        self.llm_chain = LLMChain(prompt=prompt, llm=llm, verbose=True)
+        print("Chain ready")
         self.next(self.ask_question)
 
     @step
     def ask_question(self):
-        self.llm_chain.run(self.question)
+        """Ask the question and generate the answer."""
+        print(self.llm_chain.run(self.question))
         self.next(self.end)
 
     @step
@@ -72,4 +72,5 @@ class PromptFlow(FlowSpec):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     PromptFlow()
