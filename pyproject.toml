@@ -1,17 +1,19 @@
 [tool.poetry]
-name = "kg-llm-interface"
+name = "aikg"
 version = "0.1.0"
 description = "Langchain-powered natural language interface to RDF knowledge-graphs"
 authors = ["cyril.matthey-doret <cyril.matthey-doret@epfl.ch>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "kg_llm_interface"}]
+packages = [{include = "aikg"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 rdflib = "^6.3.2"
 metaflow = "^2.8.3"
-langchain = "^0.0.144"
+langchain = "^0.0.146"
+pyllamacpp = "^1.0.6"
+tqdm = "^4.65.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
