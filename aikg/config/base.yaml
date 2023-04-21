@@ -1,0 +1,6 @@
+model_path: "data/models/gpt4all-lora-quantized-ggml.bin"
+model_url: "https://the-eye.eu/public/AI/models/nomic-ai/gpt4all/gpt4all-lora-quantized-ggml.bin"
+prompt_template: |-
+  Question: {question}
+
+  Answer: Let's think step by step.
