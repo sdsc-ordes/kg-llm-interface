@@ -16,10 +16,10 @@ test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
 	@poetry run pytest
 
-.PHONY: run 
-run: ## List metaflow pipelines
+.PHONY: run
+run: ## Run metaflow pipeline
 	@echo "Running metaflow pipeline"
-	@poetry run python src/pipeline/prompt_llm.py
+	@poetry run python aikg/pipeline/prompt_llm.py run
 
 .PHONY: help
 help:

@@ -1,18 +1,18 @@
 import re
 from dotenv import load_dotenv
 from pathlib import Path
-from langchain import PromptTemplate, LLMChain
-from langchain import HuggingFacePipeline
-from langchain.llms import GPT4All, LlamaCpp
-from langchain.callbacks.base import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from metaflow import FlowSpec, IncludeFile, step, Parameter
+from metaflow import conda_base, FlowSpec, IncludeFile, Parameter, step
 
-from aikg.utils.io import download_file
 
 QUESTION = "What is the tallest Pokemon?"
 
 
+@conda_base(
+    libraries={
+        "langchain": "0.0.146",
+        "transformers": "4.28.1",
+    }
+)
 class PromptFlow(FlowSpec):
     question = Parameter(
         "question",
@@ -42,6 +42,8 @@ class PromptFlow(FlowSpec):
     @step
     def make_prompt(self):
         """Make the prompt template"""
+        from langchain import PromptTemplate
+
         # Detect input {variables} from template
         variables = re.findall(r"{(\w+)}", self.prompt_template)
         self.prompt = PromptTemplate(
@@ -52,6 +54,7 @@ class PromptFlow(FlowSpec):
     @step
     def setup_llm(self):
         """Instantiate the LLM."""
+        from langchain import HuggingFacePipeline, LLMChain
 
         # Verbose is required to pass to the callback manager
         llm = HuggingFacePipeline.from_model_id(
