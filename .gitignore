@@ -1,4 +1,7 @@
 # project
+.idea/
+.vscode/
+.metaflow/
 .env
 data/
 # Byte-compiled / optimized / DLL files
