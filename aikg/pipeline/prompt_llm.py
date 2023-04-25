@@ -7,12 +7,6 @@ from metaflow import conda_base, FlowSpec, IncludeFile, Parameter, step
 QUESTION = "What is the tallest Pokemon?"
 
 
-@conda_base(
-    libraries={
-        "langchain": "0.0.146",
-        "transformers": "4.28.1",
-    }
-)
 class PromptFlow(FlowSpec):
     question = Parameter(
         "question",
@@ -55,14 +49,19 @@ class PromptFlow(FlowSpec):
     def setup_llm(self):
         """Instantiate the LLM."""
         from langchain import HuggingFacePipeline, LLMChain
+        from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
         # Verbose is required to pass to the callback manager
-        llm = HuggingFacePipeline.from_model_id(
-            model_id=self.model_id,
-            task="text-generation",
-            verbose=True,
-        )
+        tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        print("Loaded: Tokenizer")
+        model = AutoModelForCausalLM.from_pretrained(self.model_id)
+        print("Loaded: LLM")
+        pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
+        print("Loaded: pipeline")
+        llm = HuggingFacePipeline(pipeline=pipe)
+        print("Loaded: Connector")
         self.llm_chain = LLMChain(prompt=self.prompt, llm=llm)
+        print("Loaded: Chain")
         self.next(self.ask_question)
 
     @step

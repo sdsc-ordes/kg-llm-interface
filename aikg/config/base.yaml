@@ -1,5 +1,5 @@
-#model_id: "bigscience/bloom-1b7"
-model_id: "chainyo/alpaca-lora-7b"
+model_id: "bigscience/bloom-1b7"
+#model_id: "chainyo/alpaca-lora-7b"
 prompt_template: |-
   Question: {question}
 
