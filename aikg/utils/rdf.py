@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterator, List, Optional
 from llama_index.readers.base import BaseReader
 from llama_index.readers.schema.base import Document
 from rdflib import ConjunctiveGraph, Graph
+from rdflib.namespace import RDF, RDFS
 
 
 RDF_DOC_QUERY = """
@@ -11,24 +12,24 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?sLab ?pLab ?oClean
 WHERE
-{
+{{
     ?s ?p ?o .
     ?s rdfs:label ?sLab .
     ?p rdfs:label ?pLab .
-    OPTIONAL {
+    OPTIONAL {{
         ?o rdfs:label ?oLab .
-        FILTER(LANG(?oLab) = "en")
-    }
+        FILTER(LANG(?oLab) = "{lang}")
+    }}
     BIND(COALESCE(?oLab, ?o) AS ?oLabOrUri)
     BIND(
         IF (isLiteral(?o), ?o, STR(?oLabOrUri))
         AS ?oLabOrVal
     )
-    FILTER(LANG(?sLab) = "en")
-    FILTER(LANG(?pLab) = "en")
-    FILTER(LANG(?oLabOrVal) = "en" || LANG(?oLabOrVal) = "")
+    FILTER(LANG(?sLab) = "{lang}")
+    FILTER(LANG(?pLab) = "{lang}")
+    FILTER(LANG(?oLabOrVal) = "{lang}" || LANG(?oLabOrVal) = "")
     BIND (REPLACE(STR(?oLabOrVal), "^.*[#/:]([^/:#]*)$", "$1") as ?oClean)
-}
+}}
 """
 
 
@@ -56,9 +57,6 @@ class CustomRDFReader(BaseReader):
         """Initialize loader."""
         super().__init__(*args, **kwargs)
 
-        from rdflib import Graph, URIRef
-        from rdflib.namespace import RDF, RDFS
-
         self.g_global = Graph()
         self.g_global.parse(str(RDF))
         self.g_global.parse(str(RDFS))
@@ -66,17 +64,29 @@ class CustomRDFReader(BaseReader):
     def load_data(
         self, graph: Path | Graph, extra_info: Optional[Dict] = None
     ) -> Document:
-        """Parse graph into a document."""
+        """Parse graph into a document of human-readable triples. All
+        URIs are converted to their rdfs:label when possible. Objects
+        URIs without labels are converted to their fragment. Literals
+        are kept as they are.
+
+        Parameters
+        ----------
+        graph:
+            Path to the graph file or the graph itself.
+        extra_info:
+            Extra information to be stored in the document.
+            The "lang" key is used to specify the language of the document.
+        """
 
         lang = extra_info["lang"] if extra_info is not None else "en"
 
-        if isinstance(graph, Path):
+        if isinstance(graph, Graph):
+            g_local = graph
+        else:
             g_local = Graph()
             g_local.parse(graph)
-        else:
-            g_local = graph
 
-        res = (g_local | self.g_global).query(RDF_DOC_QUERY)
+        res = (g_local | self.g_global).query(RDF_DOC_QUERY.format(lang=lang))
 
         text = "\n".join([f"<{s}> <{p}> <{o}>" for (s, p, o) in res])
 
