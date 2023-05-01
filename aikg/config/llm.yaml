@@ -1,7 +1,3 @@
 #model_id: "bigscience/bloom-1b7"
 model_id: "chainyo/alpaca-lora-7b"
 max_new_tokens: 256
-prompt_template: |-
-  Question: {question}
-
-  Answer: Let's think step by step.
