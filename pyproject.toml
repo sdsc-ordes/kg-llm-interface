@@ -20,6 +20,7 @@ llama-index = "0.6.0.alpha3"
 rdflib = "6.2.0"
 sentence-transformers = "^2.2.2"
 chromadb = "^0.3.21"
+more-itertools = "^9.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

@@ -33,7 +33,7 @@ WHERE
 """
 
 
-def split_by_subject(graph: Graph) -> Iterator[Graph]:
+def split_graph_by_subject(graph: Graph) -> Iterator[Graph]:
     """Generate RDF documents (triples) by splitting input graph.
     Each document contains all triples with the same subject."""
 
@@ -44,6 +44,14 @@ def split_by_subject(graph: Graph) -> Iterator[Graph]:
         new_graph += graph.triples((subject, None, None))
         # Yield the new graph
         yield new_graph
+
+
+def split_conjunctive_graph_by_subject(graph: ConjunctiveGraph) -> Iterator[Graph]:
+    """Generate RDF documents (triples) by splitting input graph.
+    Each document contains all triples with the same subject."""
+    for ctx in graph.contexts():
+        for subject_graph in split_graph_by_subject(ctx):
+            yield subject_graph
 
 
 class CustomRDFReader(BaseReader):
