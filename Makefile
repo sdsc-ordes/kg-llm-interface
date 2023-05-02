@@ -1,3 +1,6 @@
+TEST_SCHEMA=https://www.pokemonkg.org/ontology/ontology.nt
+TEST_INSTANCES=https://www.pokemonkg.org/download/dump/poke-a.nq.gz
+
 .PHONY: install
 install: ## Install with the poetry and add pre-commit hooks
 	@echo "🚀 Installing packages with poetry"
@@ -17,9 +20,14 @@ test: ## Test the code with pytest
 	@poetry run pytest
 
 .PHONY: run
-run: ## Run metaflow pipeline
-	@echo "Running metaflow pipeline"
-	@poetry run python aikg/pipeline/prompt_llm.py run
+test-run: ## Run metaflow pipeline
+	@echo "Test run of metaflow pipeline"
+	@curl $(TEST_INSTANCES) -o - \
+		| gzip -dc > /tmp/instances.nq
+	@curl $(TEST_SCHEMA) -o /tmp/schema.nt
+	@poetry run python aikg/pipeline/chroma_build.py run \
+		--instance_path /tmp/instances.nq \
+		--schema_path /tmp/schema.nt
 
 .PHONY: help
 help:
