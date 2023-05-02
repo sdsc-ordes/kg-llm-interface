@@ -112,19 +112,20 @@ class ChromaBuildFlow(FlowSpec):
         from more_itertools import chunked
 
         # Instances will be indexed in batches to reduce overhead
-        BATCH_SIZE = 100
+        BATCH_SIZE = 500
         self.loader = akrdf.CustomRDFReader()
         # Schema injected into each instance graph to provide human readable context
-        doc_graphs = map(lambda g: g | self.schema_graph, self.instance_graphs)
-        self.doc_batches = list(chunked(doc_graphs, BATCH_SIZE))
+        self.doc_batches = list(chunked(self.instance_graphs, BATCH_SIZE))
         self.next(self.index_batch, foreach="doc_batches")
 
     @step
     def index_batch(self):
         """Index a batch of instances into the vector index."""
-        self.gg = self.input
-        # docs = [self.loader.load_data(inst) for inst in self.input if inst.text]
-        # self.chroma.client.add(docs, ids=[doc.doc_id for doc in docs])
+        all_docs = [
+            self.loader.load_data(inst | self.schema_graph) for inst in self.input
+        ]
+        docs = [doc for doc in all_docs if doc.text]
+        self.chroma.client.add(ids=[doc.doc_id for doc in docs], documents=docs)
         self.next(self.save_graph)
 
     @step
