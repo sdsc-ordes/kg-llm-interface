@@ -1,3 +1,0 @@
-#model_id: "bigscience/bloom-1b7"
-model_id: "chainyo/alpaca-lora-7b"
-max_new_tokens: 256
