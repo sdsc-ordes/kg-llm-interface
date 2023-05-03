@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 
-def download_file(url: str, output_path: Path):
+def download_file(url: str, output_path: str | Path):
     # send a GET request to the URL to download the file. Stream since it's large
     response = requests.get(url, stream=True)
 
