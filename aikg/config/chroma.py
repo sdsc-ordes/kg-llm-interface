@@ -10,10 +10,12 @@ class Config(BaseModel):
         chroma_url: The URL of the ChromaDB server.
         collection_name: The name of the ChromaDB collection to store the index in.
         embedding_model_id: The HuggingFace ID of the embedding model to use.
+        batch_size: The number of documents to vectorize and store in each batch.
     """
 
     chroma_url: str = "http://localhost:8000"
     collection_name: str = "test"
+    batch_size: int = 500
     embedding_model_id: Optional[str] = None
 
 

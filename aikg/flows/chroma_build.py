@@ -6,7 +6,6 @@ stored in a vector (key-value) index. The index is persisted to disk and
 can be subsequently loaded into memory for querying."""
 
 from pathlib import Path
-import sys
 from typing import Iterator, Optional
 from typing_extensions import Annotated
 import urllib.parse
@@ -20,6 +19,7 @@ from more_itertools import chunked
 from prefect import flow, task
 from rdflib import ConjunctiveGraph, Graph
 from requests import HTTPError
+from tqdm import tqdm
 import typer
 
 from aikg.config.chroma import Config, Location
@@ -93,10 +93,14 @@ def index_batch(batch: list[Document], chroma: ChromaVectorStore):
 @flow
 def chroma_build_flow(location: Location, config: Config = Config()):
     """Build a ChromaDB vector index from RDF data."""
+    load_dotenv()
     instances = load_instance_graphs(location.instances_path)
     schema = load_schema(location.schema_path)
     chroma = init_chromadb(config.chroma_url, config.collection_name)
-    for batch in batch_instances(schema, instances):
+    for batch in tqdm(
+        batch_instances(schema, instances, batch_size=config.batch_size),
+        total=config.batch_size,
+    ):
         index_batch(batch, chroma)
 
 
@@ -111,7 +115,6 @@ def cli(
     ] = None,
 ):
     """Build a ChromaDB vector index from RDF data."""
-    load_dotenv()
     location = parse_yaml_config(location_file, Location)
     config = parse_yaml_config(config_file, Config) if config_file else Config()
     chroma_build_flow(location, config)
