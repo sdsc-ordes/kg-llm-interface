@@ -39,7 +39,7 @@ def small_instance_file(instance_file) -> Path:
 
     with open(instance_file) as f, open(path, "w") as f_out:
         for i, line in enumerate(f):
-            if i > 100:
+            if i > 1000:
                 break
             f_out.write(line)
     return Path(path)

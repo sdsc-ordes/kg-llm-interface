@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
@@ -5,6 +6,7 @@ from llama_index.readers.base import BaseReader
 from llama_index.readers.schema.base import Document
 from rdflib import ConjunctiveGraph, Graph
 from rdflib.namespace import RDF, RDFS
+from SPARQLWrapper import SPARQLWrapper, CSV
 
 
 RDF_DOC_QUERY = """
@@ -54,6 +56,30 @@ def split_conjunctive_graph_by_subject(graph: ConjunctiveGraph) -> Iterator[Grap
             yield subject_graph
 
 
+def split_documents_from_endpoint(
+    endpoint: str, user: Optional[str] = None, password: Optional[str] = None
+) -> list[Document]:
+    """Load subject-based documents from a SPARQL endpoint."""
+
+    sparql = SPARQLWrapper(endpoint)
+    sparql.setReturnFormat(CSV)
+    if user and password:
+        sparql.setCredentials(user, password)
+    sparql.setQuery(RDF_DOC_QUERY.format(lang="en"))
+
+    # Load the full table of formatted triples
+    triples = sparql.queryAndConvert().decode("utf-8").split("\r\n")
+    triples = map(lambda x: x.split(",", maxsplit=2), triples)
+    triples = filter(lambda x: len(x) == 3, triples)
+    # Store triples in a dict by subject
+    docs = defaultdict(list)
+    next(triples)  # skip header
+    for s, p, o in triples:
+        docs[s].append(f"<{s}> <{p}> <{o}>")
+
+    return [Document("\n".join(doc)) for doc in docs.values()]
+
+
 class CustomRDFReader(BaseReader):
     """RDF reader."""
 
@@ -78,7 +104,7 @@ class CustomRDFReader(BaseReader):
         are kept as they are.
 
         Parameters
-        ----------
+        ---------
         graph:
             Path to the graph file or the graph itself.
         extra_info:

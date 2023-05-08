@@ -87,6 +87,11 @@ def make_documents(schema_graph: Graph, instance_graphs: list[Graph]) -> list[Do
     return [doc for doc in documents if doc.text]
 
 
+@task
+def sparql_to_documents(endpoint: str, user: str, password: str) -> list[Document]:
+    return akrdf.split_documents_from_endpoint(endpoint, user, password)
+
+
 def index_batch(batch: list[Document], chroma: ChromaVectorStore):
     """Sends a batch of document for indexing in the vector store"""
     chroma._collection.add(
@@ -101,13 +106,23 @@ def chroma_build_flow(location: Location, config: Config = Config()):
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
-    schema = load_schema(location.schema_path)
     chroma = init_chromadb(config.chroma_url, config.collection_name)
-    instances = list(load_instances(location.instances_path))
-    logger.info(f"Indexing by batches of {config.batch_size} instances")
 
-    parsed = make_documents(schema, instances)
-    for batch in chunked(parsed, config.batch_size):
+    # Load RDF data into documents. If available, use SPARQL endpoint
+    if location.sparql_endpoint:
+        docs = akrdf.split_documents_from_endpoint(
+            location.sparql_endpoint,
+            location.sparql_user,
+            location.sparql_password,
+        )
+    else:
+        schema = load_schema(location.schema_path)
+        instances = load_instances(location.instances_path)
+        docs = make_documents(schema, instances)
+
+    # Vectorize and index documents by batches to reduce overhead
+    logger.info(f"Indexing by batches of {config.batch_size} instances")
+    for batch in chunked(docs, config.batch_size):
         index_batch(batch, chroma)
 
 
@@ -121,7 +136,7 @@ def cli(
         typer.Argument(help="YAML file with Chroma client configuration."),
     ] = None,
 ):
-    """Build a ChromaDB vector index from RDF data."""
+    """Command line wrapper for RDF to ChromaDB index flow."""
     location = parse_yaml_config(location_file, Location)
     config = parse_yaml_config(config_file, Config) if config_file else Config()
     chroma_build_flow(location, config)
