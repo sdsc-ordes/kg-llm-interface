@@ -17,6 +17,8 @@ from llama_index.vector_stores import ChromaVectorStore
 from llama_index import Document
 from more_itertools import chunked
 from prefect import flow, task
+from prefect import get_run_logger, unmapped
+from prefect_dask.task_runners import DaskTaskRunner
 from rdflib import ConjunctiveGraph, Graph
 from requests import HTTPError
 from tqdm import tqdm
@@ -28,8 +30,8 @@ import aikg.utils.rdf as akrdf
 
 
 @task
-def load_instance_graphs(instance_path: Path) -> Iterator[Graph]:
-    """Load the instances RDF graph(s) into one graph per instance."""
+def load_instances(instance_path: Path) -> Iterator[Graph]:
+    """Lazy load the instances RDF graph(s) into one graph per instance."""
 
     instance_quads = ConjunctiveGraph()
     instance_quads.parse(instance_path)
@@ -71,36 +73,41 @@ def init_chromadb(chroma_url: str, collection_name: str) -> ChromaVectorStore:
 
 
 @task
-def batch_instances(
-    schema_graph: Graph, instance_graphs: Iterator[Graph], batch_size: int = 500
-):
-    """Lazily serve instance batches for indexing."""
+def make_documents(schema_graph: Graph, instance_graphs: list[Graph]) -> list[Document]:
+    """Build and documents from instance graphs."""
 
-    # Instances will be indexed in batches to reduce overhead
     loader = akrdf.CustomRDFReader()
     # Schema injected into each instance graph to provide human readable context
-    all_docs = map(lambda g: loader.load_data(g | schema_graph), instance_graphs)
-    docs = filter(lambda d: d.text, all_docs)
-    return chunked(docs, batch_size)
+    import joblib
+
+    doc_graphs = map(lambda g: g | schema_graph, instance_graphs)
+    runner = joblib.Parallel(n_jobs=12)
+    documents = runner(joblib.delayed(loader.load_data)(g) for g in doc_graphs)
+    # Only non-empty documents are kept
+    return [doc for doc in documents if doc.text]
 
 
-@task
 def index_batch(batch: list[Document], chroma: ChromaVectorStore):
-    """Index a batch of instances into the vector index."""
-    chroma.client.add(ids=[doc.doc_id for doc in batch], documents=batch)
+    """Sends a batch of document for indexing in the vector store"""
+    chroma._collection.add(
+        ids=[doc.doc_id for doc in batch],
+        documents=[doc.text for doc in batch],
+    )
 
 
 @flow
 def chroma_build_flow(location: Location, config: Config = Config()):
     """Build a ChromaDB vector index from RDF data."""
     load_dotenv()
-    instances = load_instance_graphs(location.instances_path)
+    logger = get_run_logger()
+    logger.info("INFO Started")
     schema = load_schema(location.schema_path)
     chroma = init_chromadb(config.chroma_url, config.collection_name)
-    for batch in tqdm(
-        batch_instances(schema, instances, batch_size=config.batch_size),
-        total=config.batch_size,
-    ):
+    instances = list(load_instances(location.instances_path))
+    logger.info(f"Indexing by batches of {config.batch_size} instances")
+
+    parsed = make_documents(schema, instances)
+    for batch in chunked(parsed, config.batch_size):
         index_batch(batch, chroma)
 
 
