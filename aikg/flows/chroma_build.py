@@ -26,6 +26,7 @@ import typer
 
 from aikg.config.chroma import Config, Location
 from aikg.config.common import parse_yaml_config
+from aikg.utils.chroma import get_chroma_vectorstore
 import aikg.utils.rdf as akrdf
 
 
@@ -53,23 +54,7 @@ def load_schema(schema_path: Path) -> Graph:
 def init_chromadb(chroma_url: str, collection_name: str) -> ChromaVectorStore:
     """Prepare chromadb client."""
 
-    # Connect to vector db server
-    url = urllib.parse.urlsplit(chroma_url)
-    chroma_host, chroma_port = (url.hostname, url.port)
-    chroma_client = chromadb.Client(
-        Settings(
-            chroma_api_impl="rest",
-            chroma_server_host=chroma_host,
-            chroma_server_http_port=chroma_port,
-            anonymized_telemetry=False,
-        )
-    )
-    try:
-        chroma_client.delete_collection(collection_name)
-    except HTTPError:
-        pass
-    collection = chroma_client.get_or_create_collection(collection_name)
-    return ChromaVectorStore(collection)
+    return get_chroma_vectorstore(chroma_url, collection_name)
 
 
 @task
@@ -115,6 +100,7 @@ def chroma_build_flow(location: Location, config: Config = Config()):
             location.sparql_user,
             location.sparql_password,
         )
+    # Otherwise load from RDF file using rdflib (much slower)
     else:
         schema = load_schema(location.schema_path)
         instances = load_instances(location.instances_path)
