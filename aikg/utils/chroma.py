@@ -1,11 +1,12 @@
 import chromadb
 from chromadb.config import Settings
+from fastapi import FastAPI
 from llama_index.vector_stores import ChromaVectorStore
 from requests import HTTPError
 import urllib.parse
 
 
-def get_chroma_vectorstore(chroma_url: str, collection_name: str) -> ChromaVectorStore:
+def get_chroma_client(chroma_url: str):
     """Prepare chromadb client."""
 
     # Connect to vector db server
@@ -19,9 +20,4 @@ def get_chroma_vectorstore(chroma_url: str, collection_name: str) -> ChromaVecto
             anonymized_telemetry=False,
         )
     )
-    try:
-        chroma_client.delete_collection(collection_name)
-    except HTTPError:
-        pass
-    collection = chroma_client.get_or_create_collection(collection_name)
-    return ChromaVectorStore(collection)
+    return chroma_client

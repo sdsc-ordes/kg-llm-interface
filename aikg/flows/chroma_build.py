@@ -26,7 +26,7 @@ import typer
 
 from aikg.config.chroma import Config, Location
 from aikg.config.common import parse_yaml_config
-from aikg.utils.chroma import get_chroma_vectorstore
+from aikg.utils.chroma import get_chroma_client
 import aikg.utils.rdf as akrdf
 
 
@@ -53,8 +53,13 @@ def load_schema(schema_path: Path) -> Graph:
 @task
 def init_chromadb(chroma_url: str, collection_name: str) -> ChromaVectorStore:
     """Prepare chromadb client."""
-
-    return get_chroma_vectorstore(chroma_url, collection_name)
+    chroma_client = get_chroma_client(chroma_url)
+    collection = chroma_client.get_or_create_collection(collection_name)
+    try:
+        chroma_client.delete_collection(collection_name)
+    except HTTPError:
+        pass
+    return ChromaVectorStore(chroma_collection=collection)
 
 
 @task
