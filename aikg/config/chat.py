@@ -9,7 +9,7 @@ class Location(BaseModel):
 
 
 class Config(BaseModel):
-    chat_model_id: str = "chainyo/alpaca-lora-7b"
+    model_id: str = "chainyo/alpaca-lora-7b"
     max_new_tokens: int = 256
     max_input_size: int = 2048
     num_output: int = 256

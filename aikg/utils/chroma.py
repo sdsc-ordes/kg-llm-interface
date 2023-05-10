@@ -21,3 +21,9 @@ def get_chroma_client(chroma_url: str):
         )
     )
     return chroma_client
+
+
+def connect_vector_store(url: str, collection: str) -> ChromaVectorStore:
+    chroma_client = get_chroma_client(url)
+    chroma_collection = chroma_client.get_or_create_collection(collection)
+    return ChromaVectorStore(chroma_collection=chroma_collection)
