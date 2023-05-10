@@ -3,43 +3,20 @@ fetches context for that question in a vector store and injects them into a prom
 It then sends the prompt to a LLM and returns the response to the client.
 """
 
-
-import asyncio
-import json
-import logging
-import urllib.parse
-
-
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
-from langchain.embeddings import HuggingFaceEmbeddings
-from llama_index import LangchainEmbedding, PromptHelper
-from llama_index import LLMPredictor, ServiceContext
+from dotenv import load_dotenv
+from fastapi import FastAPI
 from llama_index import QuestionAnswerPrompt, GPTVectorStoreIndex, StorageContext
-from llama_index.vector_stores import ChromaVectorStore
 
 import aikg.config.chroma
 import aikg.config.chat
-from aikg.config.common import parse_yaml_config
-from aikg.utils.chroma import get_chroma_client
+from aikg.models import Conversation
+from aikg.utils.chroma import connect_vector_store
+
 import aikg.utils.llm as akllm
 
+load_dotenv()
 chroma_config = aikg.config.chroma.Config()
 chat_config = aikg.config.chat.Config()
-
-
-def load_llm(config: aikg.config.chat.Config) -> ServiceContext:
-    prompt_helper = PromptHelper(
-        config.max_input_size, config.num_output, config.max_chunk_overlap
-    )
-
-    # define our LLM
-    llm_predictor = LLMPredictor(llm=akllm.CustomLLM())
-
-    return ServiceContext.from_defaults(
-        llm_predictor=llm_predictor,
-        prompt_helper=prompt_helper,
-    )
 
 
 def setup_query_engine(
@@ -51,18 +28,20 @@ def setup_query_engine(
     )
 
 
-def connect_vector_store(url: str, collection: str) -> ChromaVectorStore:
-    chroma_client = get_chroma_client(url)
-    chroma_collection = chroma_client.get_or_create_collection(collection)
-    return ChromaVectorStore(chroma_collection=chroma_collection)
-
-
 def setup_chatbot():
+    """Setup the prompt system, vector database and llm for the chatbot."""
+    from llama_index.readers.chroma import ChromaReader
+
     vector_store = connect_vector_store(
         chroma_config.chroma_url, chroma_config.collection_name
     )
+    ChromaReader(
+        collection_name=chroma_config.collection_name,
+        host=chroma_config.chroma_url,
+        port=chroma_config.chroma_port,
+    )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    service_context = load_llm(chat_config)
+    service_context = akllm.load_llm_context(chat_config)
     index = GPTVectorStoreIndex(
         storage_context=storage_context, service_context=service_context
     )
@@ -83,15 +62,22 @@ app = FastAPI()
 
 @app.get("/")
 def index():
-    return {"title": "Hello, welcome to the Gimie API"}
+    return {
+        "title": "Hello, welcome to the knowledge graph chatbot!",
+        "description": "This is a simple chatbot that uses a knowledge graph to answer questions.",
+        "usage": "Ask a single question using /ask?question='...', or POST a Conversation object to /chat.",
+    }
 
 
 @app.post("/chat")
-async def answer_question(question: str):
+async def chat(conversation: Conversation) -> Conversation:
+    question = conversation.last_message
     answer = process_question(question, chatbot)
-    return {"answer": answer}
+    conversation.thread += question
+    conversation.last_message = answer
+    return conversation
 
 
-@app.get("/chat/test/{question:path}")
+@app.get("/ask/")
 async def test(question: str):
-    ...
+    return process_question(question, chatbot)
