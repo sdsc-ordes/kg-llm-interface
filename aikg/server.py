@@ -3,14 +3,18 @@ fetches context for that question in a vector store and injects them into a prom
 It then sends the prompt to a LLM and returns the response to the client.
 """
 
+import urllib.parse
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from llama_index import QuestionAnswerPrompt, GPTVectorStoreIndex, StorageContext
+from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
+from llama_index import QuestionAnswerPrompt, GPTVectorStoreIndex
+from llama_index.readers.chroma import ChromaReader
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 import aikg.config.chroma
 import aikg.config.chat
 from aikg.models import Conversation
-from aikg.utils.chroma import connect_vector_store
 
 import aikg.utils.llm as akllm
 
@@ -28,35 +32,49 @@ def setup_query_engine(
     )
 
 
-def setup_chatbot():
-    """Setup the prompt system, vector database and llm for the chatbot."""
-    from llama_index.readers.chroma import ChromaReader
+def setup_llm_chain() -> LLMChain:
+    """Prepare the prompt injection and text generation system."""
 
-    vector_store = connect_vector_store(
-        chroma_config.chroma_url, chroma_config.collection_name
+    prompt = PromptTemplate(
+        template=chat_config.prompt_template,
+        input_variables=["context_str", "query_str"],
     )
-    ChromaReader(
+    tok = AutoTokenizer.from_pretrained(chat_config.model_id)
+    model = AutoModelForCausalLM.from_pretrained(chat_config.model_id)
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tok,
+        max_new_tokens=chat_config.max_new_tokens,
+    )
+    llm = HuggingFacePipeline(pipeline=pipe)
+    return LLMChain(prompt=prompt, llm=llm)
+
+
+def setup_chroma() -> ChromaReader:
+    """Setup the connection to ChromaDB."""
+
+    url = urllib.parse.urlsplit(chroma_config.chroma_url)
+    chroma_host, chroma_port = (url.hostname, url.port)
+    reader = ChromaReader(
         collection_name=chroma_config.collection_name,
-        host=chroma_config.chroma_url,
-        port=chroma_config.chroma_port,
+        host=chroma_host,
+        port=chroma_port,
     )
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    service_context = akllm.load_llm_context(chat_config)
-    index = GPTVectorStoreIndex(
-        storage_context=storage_context, service_context=service_context
-    )
-    query_engine = setup_query_engine(
-        index,
-        prompt_template=chat_config.prompt_template,
-    )
-    return query_engine
+    return reader
 
 
-def process_question(question: str, query_engine) -> str:
-    return query_engine.query(question)
+def synthesize(query, reader, llm_chain, limit=5) -> str:
+    """Retrieve k-nearest documents from the vector store and synthesize
+    an answer using documents as context."""
+    documents = reader.load_data(query=query, limit=limit)
+    context = "\n".join([doc.text for doc in documents])
+    answer = llm_chain.run(query_str=query, context_str=context)
+    return answer
 
 
-chatbot = setup_chatbot()
+reader = setup_chroma()
+llm_chain = setup_llm_chain()
 app = FastAPI()
 
 
@@ -72,7 +90,11 @@ def index():
 @app.post("/chat")
 async def chat(conversation: Conversation) -> Conversation:
     question = conversation.last_message
-    answer = process_question(question, chatbot)
+    answer = synthesize(
+        question,
+        reader,
+        llm_chain,
+    )
     conversation.thread += question
     conversation.last_message = answer
     return conversation
@@ -80,4 +102,9 @@ async def chat(conversation: Conversation) -> Conversation:
 
 @app.get("/ask/")
 async def test(question: str):
-    return process_question(question, chatbot)
+    answer = synthesize(
+        question,
+        reader,
+        llm_chain,
+    )
+    return answer

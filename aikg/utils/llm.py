@@ -19,7 +19,10 @@ class CustomLLM(LLM):
     )
 
     def _call(
-        self, prompt: str, max_new_tokens: int = LLM_CONFIG.max_new_tokens
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        max_new_tokens: int = LLM_CONFIG.max_new_tokens,
     ) -> str:
         prompt_length = len(prompt)
         response = self.pipeline(prompt, max_new_tokens=max_new_tokens)[0][
