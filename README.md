@@ -9,11 +9,20 @@ This repository uses poetry for package management. A Makefile rule is provided 
 make install
 ```
 
-## Usage
-
-The repository contains a [metaflow](https://metaflow.org/) to orchestrate pipelines.
-The pipelines are defined in [aikg/pipelines](aikg/pipeline) and can be executed with `python src/pipelines/<pipeline>.py run`.
-
 ## Pipelines
 
-* [prompt_llm.py](aikg/pipeline/prompt_llm.py): Prompt a language model with an input question.
+### Chroma build
+
+Build the chromaDB index from input RDF files.
+
+Location: [chroma_build.py](aikg/flows/chroma_build.py):
+
+CLI usage: `python aikg/flows/chroma_build.py location.yml`
+  + See [aikg.config.chroma.Location](aikg/config/chroma.py) for the schema of `location.yml`
+
+
+## Chat server
+
+The chat server can be started by running:
+
+`uvicorn aikg.server:app`
