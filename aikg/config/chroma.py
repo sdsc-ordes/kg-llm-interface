@@ -17,7 +17,8 @@ class Config(BaseModel):
     chroma_url: str = "http://localhost:8000"
     collection_name: str = "test"
     batch_size: int = 50
-    embedding_model_id: Optional[str] = None
+    # embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_model: str = "all-mpnet-base-v2"
 
 
 class Location(BaseModel):

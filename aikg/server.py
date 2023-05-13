@@ -5,6 +5,8 @@ It then sends the prompt to a LLM and returns the response to the client.
 
 import urllib.parse
 
+from chromadb.api import Collection
+from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
@@ -15,8 +17,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import aikg.config.chroma
 import aikg.config.chat
 from aikg.models import Conversation
+from aikg.utils.chroma import get_chroma_client
 
-import aikg.utils.llm as akllm
 
 load_dotenv()
 chroma_config = aikg.config.chroma.Config()
@@ -51,29 +53,33 @@ def setup_llm_chain() -> LLMChain:
     return LLMChain(prompt=prompt, llm=llm)
 
 
-def setup_chroma() -> ChromaReader:
-    """Setup the connection to ChromaDB."""
+def setup_chroma() -> Collection:
+    """Setup the connection to ChromaDB collection."""
 
     url = urllib.parse.urlsplit(chroma_config.chroma_url)
-    chroma_host, chroma_port = (url.hostname, url.port)
-    reader = ChromaReader(
-        collection_name=chroma_config.collection_name,
-        host=chroma_host,
-        port=chroma_port,
+    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=chroma_config.embedding_model
     )
-    return reader
+    chroma_host, chroma_port = (url.hostname, url.port)
+    client = get_chroma_client(chroma_config.chroma_url)
+    collection = client.get_collection(
+        chroma_config.collection_name, embedding_function=embedding_function
+    )
+    return collection
 
 
-def synthesize(query, reader, llm_chain, limit=5) -> str:
+def synthesize(query, collection, llm_chain, limit=5) -> str:
     """Retrieve k-nearest documents from the vector store and synthesize
     an answer using documents as context."""
-    documents = reader.load_data(query=query, limit=limit)
-    context = "\n".join([doc.text for doc in documents])
+    results = collection.query(query_texts=query, n_results=limit)
+    context = "\n".join(results["documents"][0])
     answer = llm_chain.run(query_str=query, context_str=context)
+    print(context)
+    print(answer)
     return answer
 
 
-reader = setup_chroma()
+collection = setup_chroma()
 llm_chain = setup_llm_chain()
 app = FastAPI()
 
@@ -92,7 +98,7 @@ async def chat(conversation: Conversation) -> Conversation:
     question = conversation.last_message
     answer = synthesize(
         question,
-        reader,
+        collection,
         llm_chain,
     )
     conversation.thread += question
@@ -104,7 +110,7 @@ async def chat(conversation: Conversation) -> Conversation:
 async def test(question: str):
     answer = synthesize(
         question,
-        reader,
+        collection,
         llm_chain,
     )
     return answer
