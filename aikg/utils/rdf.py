@@ -1,4 +1,4 @@
-from collections import defaultdict
+from itertools import groupby
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
@@ -12,7 +12,7 @@ from SPARQLWrapper import SPARQLWrapper, CSV
 RDF_DOC_QUERY = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?sLab ?pLab ?oClean
+SELECT ?s ?p ?o ?sLab ?pLab ?oClean
 WHERE
 {{
     ?s ?p ?o .
@@ -58,26 +58,34 @@ def split_conjunctive_graph_by_subject(graph: ConjunctiveGraph) -> Iterator[Grap
 
 def split_documents_from_endpoint(
     endpoint: str, user: Optional[str] = None, password: Optional[str] = None
-) -> list[Document]:
+) -> Iterator[Document]:
     """Load subject-based documents from a SPARQL endpoint."""
 
+    # Setup sparql endpoint
     sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(CSV)
     if user and password:
         sparql.setCredentials(user, password)
     sparql.setQuery(RDF_DOC_QUERY.format(lang="en"))
 
-    # Load the full table of formatted triples
-    triples = sparql.queryAndConvert().decode("utf-8").split("\r\n")
-    triples = map(lambda x: x.split(",", maxsplit=2), triples)
-    triples = filter(lambda x: len(x) == 3, triples)
-    # Store triples in a dict by subject
-    docs = defaultdict(list)
-    next(triples)  # skip header
-    for s, p, o in triples:
-        docs[s].append(f"<{s}> <{p}> <{o}>")
-
-    return [Document("\n".join(doc)) for doc in docs.values()]
+    # Load the query results
+    # Query results contain 6 columns:
+    # subject, predicate, object, subject label, predicate label, object label
+    results = sparql.queryAndConvert().decode("utf-8").split("\r\n")
+    # Parse csv fields
+    results = map(lambda x: x.split(",", maxsplit=5), results)
+    # Exclude empty / incomplete results
+    results = filter(lambda x: len(x) == 6, results)
+    next(results)  # skip header
+    results = sorted(results, key=lambda x: x[0])[1:]
+    # Yield triples and text by subject
+    for k, g in groupby(results, lambda x: x[0]):
+        # Original triples about subject k
+        data = list(g)
+        triples = "\n".join([f"<{s}> <{p}> <{o}>" for s, p, o, sl, pl, ol in data])
+        # Human-readable "triples" about subject k
+        doc = "\n".join([" ".join(elem[3:]) for elem in data])
+        yield Document(doc, extra_info={"subject": k, "triples": triples})
 
 
 class CustomRDFReader(BaseReader):
@@ -111,8 +119,9 @@ class CustomRDFReader(BaseReader):
             Extra information to be stored in the document.
             The "lang" key is used to specify the language of the document.
         """
-
-        lang = extra_info["lang"] if extra_info is not None else "en"
+        if extra_info is None:
+            extra_info = {"lang": "en"}
+        lang = extra_info.get("lang", "en")
 
         if isinstance(graph, Graph):
             g_local = graph
@@ -122,6 +131,11 @@ class CustomRDFReader(BaseReader):
 
         res = (g_local | self.g_global).query(RDF_DOC_QUERY.format(lang=lang))
 
-        text = "\n".join([f"<{s}> <{p}> <{o}>" for (s, p, o) in res])
+        # human-readable labels stored as document text
+        text = "\n".join([f"{s} {p} {o}" for (_, _, _, s, p, o) in res])
+        # original triples stored as extra info
+        extra_info["triples"] = "\n".join(
+            [f"<{s}> <{p}> <{o}>" for (s, p, o, _, _, _) in res]
+        )
 
         return Document(text, extra_info=extra_info)
