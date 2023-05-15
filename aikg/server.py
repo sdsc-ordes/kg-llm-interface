@@ -16,6 +16,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import aikg.config.chroma
 import aikg.config.chat
 from aikg.models import Conversation, Message
+from aikg.utils.chat import post_process_answer
 from aikg.utils.chroma import get_chroma_client
 
 
@@ -64,6 +65,7 @@ def synthesize(
     results = collection.query(query_texts=query, n_results=limit)
     context = "\n".join(results["documents"][0])
     answer = llm_chain.run(query_str=query, context_str=context)
+    answer = post_process_answer(answer)
     return Message(text=answer, triples=context, sender="AI", time=datetime.now())
 
 
@@ -101,3 +103,10 @@ async def test(question: str) -> Message:
         llm_chain,
     )
     return answer
+
+
+@app.get("/sparql/")
+async def sparql(question: str):
+    """TODO: Generate sparql query from question
+    and execute sparql query on kg."""
+    ...
