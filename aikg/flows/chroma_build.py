@@ -96,6 +96,7 @@ def index_batch(batch: list[Document], chroma: ChromaVectorStore):
     chroma._collection.add(
         ids=[doc.doc_id for doc in batch],
         documents=[doc.text for doc in batch],
+        metadatas=[doc.extra_info for doc in batch],
     )
 
 
@@ -116,6 +117,7 @@ def chroma_build_flow(location: Location, config: Config = Config()):
             location.sparql_user,
             location.sparql_password,
         )
+        docs = list(docs)
     # Otherwise load from RDF file using rdflib (much slower)
     else:
         schema = load_schema(location.schema_path)
