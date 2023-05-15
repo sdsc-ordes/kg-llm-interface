@@ -64,9 +64,10 @@ def synthesize(
     an answer using documents as context."""
     results = collection.query(query_texts=query, n_results=limit)
     context = "\n".join(results["documents"][0])
+    triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
     answer = llm_chain.run(query_str=query, context_str=context)
     answer = post_process_answer(answer)
-    return Message(text=answer, triples=context, sender="AI", time=datetime.now())
+    return Message(text=answer, triples=triples, sender="AI", time=datetime.now())
 
 
 collection = setup_chroma()
