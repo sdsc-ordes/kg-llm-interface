@@ -3,7 +3,6 @@ fetches context for that question in a vector store and injects them into a prom
 It then sends the prompt to a LLM and returns the response to the client.
 """
 
-import urllib.parse
 
 from chromadb.api import Collection
 from chromadb.utils import embedding_functions
@@ -12,7 +11,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
 from llama_index import QuestionAnswerPrompt, GPTVectorStoreIndex
-from llama_index.readers.chroma import ChromaReader
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 import aikg.config.chroma
@@ -24,15 +22,6 @@ from aikg.utils.chroma import get_chroma_client
 load_dotenv()
 chroma_config = aikg.config.chroma.Config()
 chat_config = aikg.config.chat.Config()
-
-
-def setup_query_engine(
-    index: GPTVectorStoreIndex, prompt_template: str, similarity_top_k: int = 2
-):
-    qa_prompt = QuestionAnswerPrompt(prompt_template)
-    return index.as_query_engine(
-        text_qa_template=qa_prompt, similarity_top_k=similarity_top_k
-    )
 
 
 def setup_llm_chain() -> LLMChain:
@@ -57,11 +46,9 @@ def setup_llm_chain() -> LLMChain:
 def setup_chroma() -> Collection:
     """Setup the connection to ChromaDB collection."""
 
-    url = urllib.parse.urlsplit(chroma_config.chroma_url)
     embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=chroma_config.embedding_model
     )
-    chroma_host, chroma_port = (url.hostname, url.port)
     client = get_chroma_client(chroma_config.chroma_url)
     collection = client.get_collection(
         chroma_config.collection_name, embedding_function=embedding_function
@@ -69,7 +56,9 @@ def setup_chroma() -> Collection:
     return collection
 
 
-def synthesize(query, collection, llm_chain, limit=5) -> Message:
+def synthesize(
+    query: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
+) -> Message:
     """Retrieve k-nearest documents from the vector store and synthesize
     an answer using documents as context."""
     results = collection.query(query_texts=query, n_results=limit)
