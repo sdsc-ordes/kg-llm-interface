@@ -7,6 +7,7 @@ import urllib.parse
 
 from chromadb.api import Collection
 from chromadb.utils import embedding_functions
+from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
@@ -16,7 +17,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 import aikg.config.chroma
 import aikg.config.chat
-from aikg.models import Conversation
+from aikg.models import Conversation, Message
 from aikg.utils.chroma import get_chroma_client
 
 
@@ -68,15 +69,13 @@ def setup_chroma() -> Collection:
     return collection
 
 
-def synthesize(query, collection, llm_chain, limit=5) -> str:
+def synthesize(query, collection, llm_chain, limit=5) -> Message:
     """Retrieve k-nearest documents from the vector store and synthesize
     an answer using documents as context."""
     results = collection.query(query_texts=query, n_results=limit)
     context = "\n".join(results["documents"][0])
     answer = llm_chain.run(query_str=query, context_str=context)
-    print(context)
-    print(answer)
-    return answer
+    return Message(text=answer, triples=context, sender="AI", time=datetime.now())
 
 
 collection = setup_chroma()
@@ -95,19 +94,18 @@ def index():
 
 @app.post("/chat")
 async def chat(conversation: Conversation) -> Conversation:
-    question = conversation.last_message
+    question = conversation.thread[-1].text
     answer = synthesize(
         question,
         collection,
         llm_chain,
     )
-    conversation.thread += question
-    conversation.last_message = answer
+    conversation.thread.append(answer)
     return conversation
 
 
 @app.get("/ask/")
-async def test(question: str):
+async def test(question: str) -> Message:
     answer = synthesize(
         question,
         collection,
