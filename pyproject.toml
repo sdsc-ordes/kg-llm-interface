@@ -25,6 +25,7 @@ typer = "^0.9.0"
 prefect-dask = "^0.2.4"
 bokeh = "2.4.3"
 sparqlwrapper = "^2.0.0"
+fastapi = "^0.95.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

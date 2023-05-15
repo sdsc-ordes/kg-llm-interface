@@ -26,6 +26,7 @@ import typer
 
 from aikg.config.chroma import Config, Location
 from aikg.config.common import parse_yaml_config
+from aikg.utils.chroma import get_chroma_client
 import aikg.utils.rdf as akrdf
 
 
@@ -50,26 +51,24 @@ def load_schema(schema_path: Path) -> Graph:
 
 
 @task
-def init_chromadb(chroma_url: str, collection_name: str) -> ChromaVectorStore:
+def init_chromadb(
+    chroma_url: str, collection_name: str, embedding_model: str
+) -> ChromaVectorStore:
     """Prepare chromadb client."""
+    from chromadb.utils import embedding_functions
 
-    # Connect to vector db server
-    url = urllib.parse.urlsplit(chroma_url)
-    chroma_host, chroma_port = (url.hostname, url.port)
-    chroma_client = chromadb.Client(
-        Settings(
-            chroma_api_impl="rest",
-            chroma_server_host=chroma_host,
-            chroma_server_http_port=chroma_port,
-            anonymized_telemetry=False,
-        )
+    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=embedding_model
     )
+    chroma_client = get_chroma_client(chroma_url)
     try:
         chroma_client.delete_collection(collection_name)
     except HTTPError:
         pass
-    collection = chroma_client.get_or_create_collection(collection_name)
-    return ChromaVectorStore(collection)
+    collection = chroma_client.get_or_create_collection(
+        collection_name, embedding_function=embedding_function
+    )
+    return ChromaVectorStore(chroma_collection=collection)
 
 
 @task
@@ -97,6 +96,7 @@ def index_batch(batch: list[Document], chroma: ChromaVectorStore):
     chroma._collection.add(
         ids=[doc.doc_id for doc in batch],
         documents=[doc.text for doc in batch],
+        metadatas=[doc.extra_info for doc in batch],
     )
 
 
@@ -106,7 +106,9 @@ def chroma_build_flow(location: Location, config: Config = Config()):
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
-    chroma = init_chromadb(config.chroma_url, config.collection_name)
+    chroma = init_chromadb(
+        config.chroma_url, config.collection_name, config.embedding_model
+    )
 
     # Load RDF data into documents. If available, use SPARQL endpoint
     if location.sparql_endpoint:
@@ -115,6 +117,8 @@ def chroma_build_flow(location: Location, config: Config = Config()):
             location.sparql_user,
             location.sparql_password,
         )
+        docs = list(docs)
+    # Otherwise load from RDF file using rdflib (much slower)
     else:
         schema = load_schema(location.schema_path)
         instances = load_instances(location.instances_path)
