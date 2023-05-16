@@ -21,7 +21,7 @@ class Config(BaseModel):
     """
 
     model_id: str = "chainyo/alpaca-lora-7b"
-    max_new_tokens: int = 256
+    max_new_tokens: int = 48
     max_input_size: int = 2048
     num_output: int = 256
     max_chunk_overlap: int = 20
@@ -34,7 +34,7 @@ class Config(BaseModel):
         "Answer the question using only the context and no "
         "prior knowledge. If the context does not contain any fact related to "
         "the question, simply answer the words 'Not found'. The answer should be "
-        "up to 2 sentences directly reflecting the facts from relevant facts while ignoring "
+        "maximum 2 sentences directly reflecting the facts from relevant facts while ignoring "
         "irrelevant ones.\n"
         "Question: {query_str}"
         "Answer: "
