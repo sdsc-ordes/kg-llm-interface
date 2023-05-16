@@ -7,7 +7,7 @@ FROM python:3.10-slim-bullseye
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get -y install python3-dev
+RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential
 
 # Install poetry
 RUN pip install poetry
