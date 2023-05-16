@@ -2,14 +2,14 @@
 
 
 def keep_first_line(text: str) -> str:
-    """Truncate a string to the first line.
+    r"""Truncate a string to the first non-empty line.
 
     Examples
     --------
-    >>> keep_first_line("First line.\nSecond line.")
+    >>> keep_first_line("\nFirst line.\nSecond line.")
     'First line.'
     """
-    return text.split("\n")[0]
+    return text.lstrip("\n").split("\n")[0].strip(" ")
 
 
 def drop_if_keyword(text: str, keyword: str = "Not found.") -> str:
