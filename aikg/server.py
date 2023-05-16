@@ -2,7 +2,8 @@
 fetches context for that question in a vector store and injects them into a prompt.
 It then sends the prompt to a LLM and returns the response to the client.
 """
-
+import logging
+import sys
 
 from chromadb.api import Collection
 from chromadb.utils import embedding_functions
@@ -18,6 +19,8 @@ import aikg.config.chat
 from aikg.models import Conversation, Message
 from aikg.utils.chat import post_process_answer
 from aikg.utils.chroma import get_chroma_client
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 load_dotenv()
@@ -62,11 +65,16 @@ def synthesize(
 ) -> Message:
     """Retrieve k-nearest documents from the vector store and synthesize
     an answer using documents as context."""
+
+    logging.debug(f"Question: {query}")
     results = collection.query(query_texts=query, n_results=limit)
     context = "\n".join(results["documents"][0])
+    logging.debug(f"Context: {context}")
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
+    logging.debug(f"Triples: {triples}")
     answer = llm_chain.run(query_str=query, context_str=context)
     answer = post_process_answer(answer)
+    logging.debug(f"Answer: {answer}")
     return Message(text=answer, triples=triples, sender="AI", time=datetime.now())
 
 
