@@ -26,3 +26,19 @@ CLI usage: `python aikg/flows/chroma_build.py location.yml`
 The chat server can be started by running:
 
 `uvicorn aikg.server:app`
+
+## Containerized service
+
+:warning: WIP, not functional yet
+
+All services can be deployed together using `docker-compose`:
+
+```sh
+docker-compose up --profile db,frontend
+```
+
+If an external instance of ChromaDB is already running, set the correct values for CHROMA_URL and CHROMA_PORT in `.env`, then run:
+
+```sh
+docker-compose up --profile frontend
+```
