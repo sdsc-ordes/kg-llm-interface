@@ -5,13 +5,19 @@ networks:
     driver: bridge
 
 services:
+
   chat-server:
     build:
       context: .
       dockerfile: Dockerfile
     command: uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
+    ports:
+      - ${SERVER_PORT}:8001
+    networks:
+      - net
+
   chroma-server:
-    image: ghcr.io/chroma-core/chroma:0.3.24.dev7
+    image: ghcr.io/chroma-core/chroma:0.3.23
     volumes:
       - ./chroma:/chroma
       - index_data:/index_data
@@ -21,7 +27,7 @@ services:
       - CLICKHOUSE_HOST=clickhouse
       - CLICKHOUSE_PORT=8123
     ports:
-      - 8000:8000
+      - ${CHROMADB_PORT}:8000
     depends_on:
       - clickhouse
     networks:
@@ -43,3 +49,11 @@ services:
       - ./config/chroma_users.xml:/etc/clickhouse-server/users.d/chroma.xml
     networks:
       - net
+
+volumes:
+  clickhouse_data:
+    driver: local
+  index_data:
+    driver: local
+  backups:
+    driver: local
