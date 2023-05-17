@@ -2,6 +2,7 @@
 fetches context for that question in a vector store and injects them into a prompt.
 It then sends the prompt to a LLM and returns the response to the client.
 """
+from base64 import urlsafe_b64decode
 import logging
 import sys
 
@@ -11,7 +12,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
-from llama_index import QuestionAnswerPrompt, GPTVectorStoreIndex
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 import aikg.config.chroma
@@ -66,15 +66,11 @@ def synthesize(
     """Retrieve k-nearest documents from the vector store and synthesize
     an answer using documents as context."""
 
-    logging.debug(f"Question: {query}")
     results = collection.query(query_texts=query, n_results=limit)
     context = "\n".join(results["documents"][0])
-    logging.debug(f"Context: {context}")
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
-    logging.debug(f"Triples: {triples}")
     answer = llm_chain.run(query_str=query, context_str=context)
     answer = post_process_answer(answer)
-    logging.debug(f"Answer: {answer}")
     return Message(text=answer, triples=triples, sender="AI", time=datetime.now())
 
 
