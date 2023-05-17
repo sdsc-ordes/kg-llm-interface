@@ -6,35 +6,51 @@ networks:
 
 services:
 
+  # frontend:
+  #   image: ghcr.io/sdsc-ord/chatllm:latest
+  #   container_name: kg_llm_frontend
+  #   ports:
+  #     - 8000:8000
+  #   networks:
+  #     net:
+  #   profiles:
+  #     - frontend
+
   chat-server:
     build:
       context: .
       dockerfile: Dockerfile
     command: uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
+    container_name: kg_llm_server
     ports:
-      - ${SERVER_PORT}:8001
+      - 8001:8001
     networks:
-      - net
+      net:
+
 
   chroma-server:
     image: ghcr.io/chroma-core/chroma:0.3.23
     volumes:
-      - ./chroma:/chroma
       - index_data:/index_data
     command: uvicorn chromadb.app:app --reload --workers 1 --host 0.0.0.0 --port 8000 --log-config log_config.yml
+    container_name: kg_llm_chroma
     environment:
       - CHROMA_DB_IMPL=clickhouse
       - CLICKHOUSE_HOST=clickhouse
       - CLICKHOUSE_PORT=8123
     ports:
-      - ${CHROMADB_PORT}:8000
+      - 8000:8000
     depends_on:
       - clickhouse
+    profiles:
+      - db
     networks:
-      - net
+      net:
+
 
   clickhouse:
     image: clickhouse/clickhouse-server:22.9-alpine
+    container_name: kg_llm_clickhouse
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
       - CLICKHOUSE_TCP_PORT=8999
@@ -47,8 +63,11 @@ services:
       - backups:/backups
       - ./config/backup_disk.xml:/etc/clickhouse-server/config.d/backup_disk.xml
       - ./config/chroma_users.xml:/etc/clickhouse-server/users.d/chroma.xml
+    profiles:
+      - db
     networks:
-      - net
+      net:
+
 
 volumes:
   clickhouse_data:
