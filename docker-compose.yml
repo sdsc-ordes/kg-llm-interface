@@ -1,0 +1,45 @@
+version: '3.9'
+
+networks:
+  net:
+    driver: bridge
+
+services:
+  chat-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
+  chroma-server:
+    image: ghcr.io/chroma-core/chroma:0.3.24.dev7
+    volumes:
+      - ./chroma:/chroma
+      - index_data:/index_data
+    command: uvicorn chromadb.app:app --reload --workers 1 --host 0.0.0.0 --port 8000 --log-config log_config.yml
+    environment:
+      - CHROMA_DB_IMPL=clickhouse
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+    ports:
+      - 8000:8000
+    depends_on:
+      - clickhouse
+    networks:
+      - net
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:22.9-alpine
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - CLICKHOUSE_TCP_PORT=8999
+      - CLICKHOUSE_HTTP_PORT=8123
+    ports:
+      - '8123:8123'
+      - '8999:8999'
+    volumes:
+      - clickhouse_data:/bitnami/clickhouse
+      - backups:/backups
+      - ./config/backup_disk.xml:/etc/clickhouse-server/config.d/backup_disk.xml
+      - ./config/chroma_users.xml:/etc/clickhouse-server/users.d/chroma.xml
+    networks:
+      - net
