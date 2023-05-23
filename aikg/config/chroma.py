@@ -16,8 +16,8 @@ class Config(BaseModel):
     """
 
     host: str = os.environ.get("CHROMA_HOST", "http://localhost")
-    port: int = int(os.environ.get("CHROMA_PORT", 8000))
-    collection_name: str = "test"
+    port: int = int(os.environ.get("CHROMA_PORT", "8000"))
+    collection_name: str = os.environ.get("CHROMA_COLLECTION", "test")
     batch_size: int = 50
     # embedding_model: str = "all-MiniLM-L6-v2"
     embedding_model: str = "all-mpnet-base-v2"
