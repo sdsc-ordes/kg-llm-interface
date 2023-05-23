@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
+    command: poetry run uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
     container_name: kg_llm_server
     depends_on:
       - chroma-server
