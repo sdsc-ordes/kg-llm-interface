@@ -8,13 +8,15 @@ from typing import Literal, Optional
 class Config(BaseModel):
     """
     Attributes:
-        chroma_url: The URL of the ChromaDB server.
+        host: The host of the ChromaDB server.
+        port: The port of the ChromaDB server.
         collection_name: The name of the ChromaDB collection to store the index in.
         embedding_model_id: The HuggingFace ID of the embedding model to use.
         batch_size: The number of documents to vectorize and store in each batch.
     """
 
-    chroma_url: str = "http://localhost:8000"
+    host: str = os.environ.get("CHROMA_HOST", "http://localhost")
+    port: int = int(os.environ.get("CHROMA_PORT", 8000))
     collection_name: str = "test"
     batch_size: int = 50
     # embedding_model: str = "all-MiniLM-L6-v2"

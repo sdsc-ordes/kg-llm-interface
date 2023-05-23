@@ -52,7 +52,7 @@ def load_schema(schema_path: Path) -> Graph:
 
 @task
 def init_chromadb(
-    chroma_url: str, collection_name: str, embedding_model: str
+    host: str, port: int, collection_name: str, embedding_model: str
 ) -> ChromaVectorStore:
     """Prepare chromadb client."""
     from chromadb.utils import embedding_functions
@@ -60,7 +60,7 @@ def init_chromadb(
     embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=embedding_model
     )
-    chroma_client = get_chroma_client(chroma_url)
+    chroma_client = get_chroma_client(host, port)
     try:
         chroma_client.delete_collection(collection_name)
     except HTTPError:
@@ -107,7 +107,7 @@ def chroma_build_flow(location: Location, config: Config = Config()):
     logger = get_run_logger()
     logger.info("INFO Started")
     chroma = init_chromadb(
-        config.chroma_url, config.collection_name, config.embedding_model
+        config.host, config.port, config.collection_name, config.embedding_model
     )
 
     # Load RDF data into documents. If available, use SPARQL endpoint

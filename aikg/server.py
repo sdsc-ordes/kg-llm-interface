@@ -53,7 +53,7 @@ def setup_chroma() -> Collection:
     embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=chroma_config.embedding_model
     )
-    client = get_chroma_client(chroma_config.chroma_url)
+    client = get_chroma_client(chroma_config.host, chroma_config.port)
     collection = client.get_collection(
         chroma_config.collection_name, embedding_function=embedding_function
     )

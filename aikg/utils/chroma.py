@@ -6,17 +6,15 @@ from requests import HTTPError
 import urllib.parse
 
 
-def get_chroma_client(chroma_url: str):
+def get_chroma_client(host: str, port: int):
     """Prepare chromadb client."""
 
     # Connect to vector db server
-    url = urllib.parse.urlsplit(chroma_url)
-    chroma_host, chroma_port = (url.hostname, url.port)
     chroma_client = chromadb.Client(
         Settings(
             chroma_api_impl="rest",
-            chroma_server_host=chroma_host,
-            chroma_server_http_port=chroma_port,
+            chroma_server_host=host,
+            chroma_server_http_port=str(port),
             anonymized_telemetry=False,
         )
     )
