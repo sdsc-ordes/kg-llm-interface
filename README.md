@@ -57,7 +57,7 @@ flowchart TB
 docker-compose up --profile db,frontend
 ```
 
-If an external instance of ChromaDB is already running, set the correct values for CHROMA_URL and CHROMA_PORT in `.env`, then run:
+If an external instance of ChromaDB is already running, set the correct values for CHROMA_HOST and CHROMA_PORT in `.env`, then run:
 
 ```sh
 docker-compose up --profile frontend

@@ -19,4 +19,4 @@ COPY . /app
 RUN poetry install --no-interaction --no-ansi -vvv
 
 # Run the server
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["poetry", "run", "uvicorn", "aikg.server:app", "--host", "0.0.0.0", "--port", "80"]
