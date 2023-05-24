@@ -7,7 +7,7 @@ class SparqlConfig(BaseModel):
     Attributes:
         host: The host of the SPARQL endpoint.
         port: The port of the SPARQL endpoint.
-        repo: The name of the repository or graph to query.
+        repo: The name of the repository or dataset to query.
         user: The username to use for authentication.
         password: The password to use for authentication.
     """
