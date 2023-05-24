@@ -54,11 +54,11 @@ flowchart TB
 > figure generated with [docker-compose-viz-mermaid](https://github.com/derlin/docker-compose-viz-mermaid)
 
 ```sh
-docker-compose up --profile db,frontend
+docker-compose --profile db up --build
 ```
 
 If an external instance of ChromaDB is already running, set the correct values for CHROMA_HOST and CHROMA_PORT in `.env`, then run:
 
 ```sh
-docker-compose up --profile frontend
+docker-compose up --build
 ```
