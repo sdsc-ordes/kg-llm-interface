@@ -28,7 +28,8 @@ services:
       - ${SERVER_PORT}:${SERVER_PORT}
     networks:
       net:
-
+    env_file:
+      - .env
 
   chroma-server:
     image: ghcr.io/chroma-core/chroma:0.3.23
