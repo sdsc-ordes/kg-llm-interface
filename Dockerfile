@@ -10,8 +10,8 @@ WORKDIR /app
 RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential libopenblas-base libopenmpi-dev
 
 # Install poetry
-RUN pip install poetry
-# RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install 'poetry==1.5.0'
+#RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy the source code into docker image
 COPY . /app
