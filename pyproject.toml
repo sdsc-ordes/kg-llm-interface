@@ -9,9 +9,7 @@ packages = [{include = "aikg"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pyllamacpp = "^1.0.6"
 tqdm = "^4.65.0"
-llama-cpp-python = "^0.1.35"
 transformers = "^4.28.1"
 python-dotenv = "^1.0.0"
 ipykernel = "^6.22.0"
@@ -27,6 +25,8 @@ bokeh = "2.4.3"
 sparqlwrapper = "^2.0.0"
 fastapi = "^0.95.1"
 uvicorn = "^0.22.0"
+torch = { url = "https://download.pytorch.org/whl/cpu/torch-2.0.1%2Bcpu-cp310-cp310-linux_x86_64.whl"}
+pyllamacpp = "^2.3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
