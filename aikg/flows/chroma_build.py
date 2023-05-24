@@ -1,4 +1,4 @@
-"""This flow builds a ChromaDB vector index from RDF data.
+"""This flow builds a ChromaDB vector index from RDF data in a SPARQL endpoint.
 
 The RDF data is split into "documents" consisting of triples with the same
 subject. The documents are then vectorized using a language model and
@@ -86,7 +86,7 @@ def chroma_build_flow(
     chroma_cfg: ChromaConfig = ChromaConfig(),
     sparql_cfg: SparqlConfig = SparqlConfig(),
 ):
-    """Build a ChromaDB vector index from RDF data."""
+    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint."""
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
