@@ -17,16 +17,32 @@ def setup_sparql_endpoint(
     endpoint: str, user: Optional[str] = None, password: Optional[str] = None
 ) -> SPARQLWrapper:
     # Setup sparql endpoint
-    sparql = SPARQLWrapper(endpoint)
+    sparql = SPARQLWrapper(endpoint, updateEndpoint=endpoint + "/statements")
     if user and password:
         sparql.setCredentials(user, password)
     return sparql
 
 
 @task
-def insert_triples(triples: str, endpoint: SPARQLWrapper):
+def insert_triples(rdf_file: Path, endpoint: SPARQLWrapper):
     """Sends a batch of document for indexing in the vector store"""
-    endpoint.setQuery(f"INSERT DATA {{ {triples} }}")
+    from rdflib import Graph
+
+    g1 = Graph().parse(rdf_file)
+    query = "\n".join([f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in g1.namespaces()])
+    query += f"\nINSERT DATA {{"
+    query += " .\n".join(
+        [
+            f"\t\t{s.n3()} {p.n3()} {o.n3()}"
+            for (s, p, o) in g1.triples((None, None, None))
+        ]
+    )
+    query += f" . \n\n}}\n"
+    endpoint.setQuery(query)
+    endpoint.queryType = "INSERT"
+    endpoint.method = "POST"
+    endpoint.setReturnFormat("json")
+    results = endpoint.query()
 
 
 @flow
@@ -41,7 +57,7 @@ def sparql_insert_flow(
         sparql_cfg.endpoint, sparql_cfg.user, sparql_cfg.password
     )
     logger.info("INFO SPARQL endpoint connected")
-    insert_triples(rdf_file.read_text(), sparql)
+    insert_triples(rdf_file, sparql)
 
 
 def cli(
