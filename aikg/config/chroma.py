@@ -15,7 +15,7 @@ class ChromaConfig(BaseModel):
         batch_size: The number of documents to vectorize and store in each batch.
     """
 
-    host: str = os.environ.get("CHROMA_HOST", "http://localhost")
+    host: str = os.environ.get("CHROMA_HOST", "127.0.0.1")
     port: int = int(os.environ.get("CHROMA_PORT", "8000"))
     collection_name: str = os.environ.get("CHROMA_COLLECTION", "test")
     batch_size: int = 50

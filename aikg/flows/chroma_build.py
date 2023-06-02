@@ -44,7 +44,7 @@ def init_chromadb(
     chroma_client = get_chroma_client(host, port)
     try:
         chroma_client.delete_collection(collection_name)
-    except HTTPError:
+    except (HTTPError, Exception) as _:
         pass
     collection = chroma_client.get_or_create_collection(
         collection_name, embedding_function=embedding_function
