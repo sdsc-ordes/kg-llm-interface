@@ -24,8 +24,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 load_dotenv()
-chroma_config = aikg.config.chroma.Config()
-chat_config = aikg.config.chat.Config()
+chroma_config = aikg.config.chroma.ChromaConfig()
+chat_config = aikg.config.chat.ChatConfig()
 
 
 def setup_llm_chain() -> LLMChain:
