@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kg-llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kg-llm
+  template:
+    metadata:
+      labels:
+        app: kg-llm
+    spec:
+      containers:
+      - name: kg-llm-container
+        image: daniilzhyrov/kg-llm:latest
+        env:
+          - name: CHROMA_HOST
+            value: ${CHROMA_SERVICE_NAME}.${NAMESPACE}.svc.cluster.local
+          - name: CHROMA_SERVICE_NAME
+            value: placeholder
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
