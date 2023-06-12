@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kg-llm-service
+spec:
+  selector:
+    app: kg-llm
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

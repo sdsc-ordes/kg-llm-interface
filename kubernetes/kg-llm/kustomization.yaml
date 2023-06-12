@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+- name: kg-llm-config
+  env: params.env
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: kg-llm-config
+    fieldPath: data.CHROMA_SERVICE
+  targets:
+  - select:
+      kind: Deployment
+      name: kg-llm
+    fieldPaths:
+    - spec.template.spec.containers.[name=kg-llm-container].env.[name=CHROMA_SERVICE_NAME].value
