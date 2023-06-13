@@ -20,12 +20,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: poetry run uvicorn aikg.server:app --reload --port ${SERVER_PORT} --host 0.0.0.0
+    command: poetry run uvicorn aikg.server:app --reload --port 8001 --host 0.0.0.0
     container_name: kg_llm_server
     depends_on:
       - chroma-server
     ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
+      - ${SERVER_PORT:-8001}:8001
     networks:
       net:
     env_file:
@@ -35,14 +35,14 @@ services:
     image: ghcr.io/chroma-core/chroma:0.3.23
     volumes:
       - index_data:/index_data
-    command: uvicorn chromadb.app:app --reload --workers 1 --host 0.0.0.0 --port ${CHROMA_PORT} --log-config log_config.yml
+    command: uvicorn chromadb.app:app --reload --workers 1 --host 0.0.0.0 --port 8000 --log-config log_config.yml
     container_name: kg_llm_chroma
     environment:
       - CHROMA_DB_IMPL=clickhouse
       - CLICKHOUSE_HOST=clickhouse
       - CLICKHOUSE_PORT=8123
     ports:
-      - ${CHROMA_PORT}:${CHROMA_PORT}
+      - ${CHROMA_PORT:-8000}:8000
     depends_on:
       - clickhouse
     profiles:

@@ -4,11 +4,7 @@ from pydantic import BaseModel
 from typing import Literal, Optional
 
 
-class Location(BaseModel):
-    ...
-
-
-class Config(BaseModel):
+class ChatConfig(BaseModel):
     """Chatbot configuration.
 
     Attributes:

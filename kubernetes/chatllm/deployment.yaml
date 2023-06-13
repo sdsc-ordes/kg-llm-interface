@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatllm
+  template:
+    metadata:
+      labels:
+        app: chatllm
+    spec:
+      containers:
+      - name: chatllm-container
+        image: daniilzhyrov/chatllm:latest
+        ports:
+        - containerPort: 0
+          name: http

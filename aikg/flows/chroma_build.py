@@ -1,4 +1,4 @@
-"""This flow builds a ChromaDB vector index from RDF data.
+"""This flow builds a ChromaDB vector index from RDF data in a SPARQL endpoint.
 
 The RDF data is split into "documents" consisting of triples with the same
 subject. The documents are then vectorized using a language model and
@@ -24,30 +24,11 @@ from requests import HTTPError
 from tqdm import tqdm
 import typer
 
-from aikg.config.chroma import Config, Location
+from aikg.config.chroma import ChromaConfig
+from aikg.config.sparql import SparqlConfig
 from aikg.config.common import parse_yaml_config
 from aikg.utils.chroma import get_chroma_client
 import aikg.utils.rdf as akrdf
-
-
-@task
-def load_instances(instance_path: Path) -> Iterator[Graph]:
-    """Lazy load the instances RDF graph(s) into one graph per instance."""
-
-    instance_quads = ConjunctiveGraph()
-    instance_quads.parse(instance_path)
-
-    return akrdf.split_conjunctive_graph_by_subject(instance_quads)
-
-
-@task
-def load_schema(schema_path: Path) -> Graph:
-    """Load source schema/ontology graph."""
-
-    schema_graph = Graph()
-    schema_graph.parse(schema_path)
-
-    return schema_graph
 
 
 @task
@@ -63,7 +44,7 @@ def init_chromadb(
     chroma_client = get_chroma_client(host, port)
     try:
         chroma_client.delete_collection(collection_name)
-    except HTTPError:
+    except (HTTPError, Exception) as _:
         pass
     collection = chroma_client.get_or_create_collection(
         collection_name, embedding_function=embedding_function
@@ -101,49 +82,56 @@ def index_batch(batch: list[Document], chroma: ChromaVectorStore):
 
 
 @flow
-def chroma_build_flow(location: Location, config: Config = Config()):
-    """Build a ChromaDB vector index from RDF data."""
+def chroma_build_flow(
+    chroma_cfg: ChromaConfig = ChromaConfig(),
+    sparql_cfg: SparqlConfig = SparqlConfig(),
+):
+    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint."""
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
     chroma = init_chromadb(
-        config.host, config.port, config.collection_name, config.embedding_model
+        chroma_cfg.host,
+        chroma_cfg.port,
+        chroma_cfg.collection_name,
+        chroma_cfg.embedding_model,
     )
 
-    # Load RDF data into documents. If available, use SPARQL endpoint
-    if location.sparql_endpoint:
-        docs = akrdf.split_documents_from_endpoint(
-            location.sparql_endpoint,
-            location.sparql_user,
-            location.sparql_password,
-        )
-        docs = list(docs)
-    # Otherwise load from RDF file using rdflib (much slower)
-    else:
-        schema = load_schema(location.schema_path)
-        instances = load_instances(location.instances_path)
-        docs = make_documents(schema, instances)
+    docs = akrdf.split_documents_from_endpoint(
+        sparql_cfg.endpoint,
+        sparql_cfg.user,
+        sparql_cfg.password,
+    )
+    docs = list(docs)
 
     # Vectorize and index documents by batches to reduce overhead
-    logger.info(f"Indexing by batches of {config.batch_size} instances")
-    for batch in chunked(docs, config.batch_size):
+    logger.info(f"Indexing by batches of {chroma_cfg.batch_size} instances")
+    for batch in chunked(docs, chroma_cfg.batch_size):
         index_batch(batch, chroma)
 
 
 def cli(
-    location_file: Annotated[
-        Path,
-        typer.Argument(help="YAML file with location of RDF data to index"),
-    ],
-    config_file: Annotated[
+    chroma_cfg_path: Annotated[
         Optional[Path],
-        typer.Argument(help="YAML file with Chroma client configuration."),
+        typer.Option(help="YAML file with Chroma client configuration."),
+    ] = None,
+    sparql_cfg_path: Annotated[
+        Optional[Path],
+        typer.Option(help="YAML file with SPARQL endpoint configuration."),
     ] = None,
 ):
     """Command line wrapper for RDF to ChromaDB index flow."""
-    location = parse_yaml_config(location_file, Location)
-    config = parse_yaml_config(config_file, Config) if config_file else Config()
-    chroma_build_flow(location, config)
+    chroma_cfg = (
+        parse_yaml_config(chroma_cfg_path, ChromaConfig)
+        if chroma_cfg_path
+        else ChromaConfig()
+    )
+    sparql_cfg = (
+        parse_yaml_config(sparql_cfg_path, SparqlConfig)
+        if sparql_cfg_path
+        else SparqlConfig()
+    )
+    chroma_build_flow(chroma_cfg, sparql_cfg)
 
 
 if __name__ == "__main__":
