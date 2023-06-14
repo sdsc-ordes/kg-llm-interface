@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- service.yaml
+- configmaps.yaml
+- pvcs.yaml
+
+configMapGenerator:
+- name: fuseki-config
+  envs:
+  - params.env
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: fuseki-db-config
+    fieldpath: data.FUSEKI_HTTP_PORT
+  targets:
+  - select:
+      kind: Deployment
+      name: fuseki
+    fieldPaths:
+    - spec.template.spec.containers.[name=fuseki].env.[name=FUSEKI_HTTP_PORT].value
+  - select:
+        kind: application
+        name: fuseki
+    fieldPaths:
+    - spec.ports.[name=http].targetPort
+    - spec.ports.[name=http].port
