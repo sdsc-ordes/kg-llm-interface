@@ -26,15 +26,17 @@ def setup_sparql_endpoint(
 @task
 def insert_triples(rdf_file: Path, endpoint: SPARQLWrapper):
     """Sends a batch of document for indexing in the vector store"""
-    from rdflib import Graph
+    from rdflib import Dataset
 
-    g1 = Graph().parse(rdf_file)
-    query = "\n".join([f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in g1.namespaces()])
+    data = Dataset()
+    data.parse(rdf_file)
+    
+    query = "\n".join([f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()])
     query += f"\nINSERT DATA {{"
     query += " .\n".join(
         [
             f"\t\t{s.n3()} {p.n3()} {o.n3()}"
-            for (s, p, o) in g1.triples((None, None, None))
+            for (s, p, o, _) in data.quads()
         ]
     )
     query += f" . \n\n}}\n"
