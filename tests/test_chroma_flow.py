@@ -1,16 +1,12 @@
-from aikg.config.chroma import Config, Location
+from aikg.config.chroma import ChromaConfig
+from aikg.config.sparql import SparqlConfig
 from aikg.flows.chroma_build import chroma_build_flow
+from aikg.flows.insert_triples import sparql_insert_flow
 
 
-def test_build_chroma(schema_file, small_instance_file):
-    loc = Location(instances_path=small_instance_file, schema_path=schema_file)
-    chroma_build_flow(loc, Config())
 
 
-def test_build_chroma_sparql():
-    location = Location(
-        sparql_endpoint="http://localhost:7200/repositories/pokemon",
-        sparql_user="admin",
-        sparql_password="admin",
-    )
-    chroma_build_flow(location, Config())
+def test_init_data(schema_file, small_instance_file):
+    sparql_insert_flow(schema_file, SparqlConfig())
+    sparql_insert_flow(small_instance_file, SparqlConfig())
+    chroma_build_flow()
