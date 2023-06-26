@@ -12,8 +12,12 @@ class SparqlConfig(BaseModel):
         password: The password to use for authentication.
     """
 
-    endpoint: str = os.environ.get(
-        "SPARQL_ENDPOINT", "http://localhost:7200/repositories/test"
-    )
+    host: str = os.environ.get("SPARQL_HOST", "localhost")
+    port: str = os.environ.get("SPARQL_PORT", "7200")
+    repo: str = os.environ.get("SPARQL_REPO", "test")
     user: str = os.environ.get("SPARQL_USER", "admin")
     password: str = os.environ.get("SPARQL_PASSWORD", "admin")
+
+    @property
+    def endpoint(self):
+        return f"http://{self.host}:{self.port}/repositories/{self.repo}"

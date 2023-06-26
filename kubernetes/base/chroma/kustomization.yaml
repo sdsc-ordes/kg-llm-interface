@@ -50,7 +50,7 @@ replacements:
     - spec.template.spec.containers.[name=kg-llm-chroma].env.[name=CHROMA_PORT].value
   - select:
         kind: Service
-        name: chroma-server
+        name: chroma-service
     fieldPaths:
     - spec.ports.[name=http].targetPort
     - spec.ports.[name=http].port

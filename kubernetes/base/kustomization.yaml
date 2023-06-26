@@ -5,3 +5,4 @@ resources:
 - chatllm
 - kg-llm
 - chroma
+- graphdb

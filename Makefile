@@ -15,7 +15,14 @@ check: ## Run code quality tools.
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@poetry run pytest
+	@CHROMA_HOST=${CHROMA_HOST} CHROMA_PORT=${CHROMA_PORT} SPARQL_HOST=${SPARQL_HOST} SPARQL_PORT=${SPARQL_PORT} poetry run pytest
+
+.PHONY: deploy
+deploy:
+	@echo "🚀 Deploying all the services"
+	@zip -r kubernetes/overlays/data-retriever/kg-llm-interface.zip *
+	@kubectl apply -k kubernetes/overlays/data-retriever
+	#@rm kubernetes/overlays/data-retriever/kg-llm-interface.zip
 
 .PHONY: help
 help:

@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-retreiver
+spec:
+  template:
+    spec:
+      containers:
+      - name: data-retreiver-container
+        image: daniilzhyrov/kg-llm:latest
+        env:
+        - name: CHROMA_HOST
+          value: "servicename.servicenamespace.svc.cluster.local"
+        - name: CHROMA_PORT
+          value: "0"
+        - name: SPARQL_HOST
+          value: "servicename.servicenamespace.svc.cluster.local"
+        - name: SPARQL_PORT
+          value: "0"
+        volumeMounts:
+        - name: files
+          mountPath: /scripts
+        command: ["/bin/bash", "/scripts/entrypoint.sh"]
+      restartPolicy: Never
+      volumes:
+      - name: files
+        configMap:
+          name: files
+          defaultMode: 0777
+  parallelism: 1

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graphdb
+  template:
+    metadata:
+      labels:
+        app: graphdb
+    spec:
+      containers:
+      - name: graphdb
+        image: ontotext/graphdb:10.2.0
+        ports:
+        - containerPort: 0
+          name: graphdb
+        volumeMounts:
+        - name: graphdb-home
+          mountPath: /opt/graphdb/home
+      volumes:
+      - name: graphdb-home
+        persistentVolumeClaim:
+          claimName: graphdb-home
+

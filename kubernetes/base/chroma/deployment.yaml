@@ -6,23 +6,23 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chroma-server
+      app: chroma
   template:
     metadata:
       labels:
-        app: chroma-server
+        app: chroma
     spec:
       containers:
       - name: kg-llm-chroma
         image: ghcr.io/chroma-core/chroma:0.3.23
-        command: 
+        command:
         - uvicorn
         args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "log_config.yml"]
         env:
         - name: CHROMA_DB_IMPL
           value: "clickhouse"
         - name: CLICKHOUSE_HOST
-          value: "clickhouse"
+          value: "localhost"
         - name: CLICKHOUSE_PORT
           value: clickhouse_http_port_placeholder
         - name: CHROMA_PORT
