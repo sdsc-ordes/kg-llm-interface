@@ -27,7 +27,7 @@ replacements:
     - spec.template.spec.containers.[name=graphdb].ports.[name=graphdb].containerPort
   - select:
         kind: Service
-        name: graphdb
+        name: graphdb-service
     fieldPaths:
     - spec.ports.[name=http].targetPort
     - spec.ports.[name=http].port

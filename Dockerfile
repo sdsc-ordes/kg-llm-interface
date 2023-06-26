@@ -7,10 +7,10 @@ FROM python:3.10-slim-bullseye
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential libopenblas-base libopenmpi-dev
+RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential libopenblas-base libopenmpi-dev unzip
 
 # Install poetry
-RUN pip install 'poetry==1.5.0'
+RUN pip install 'poetry==1.5.0' pytest tqdm pydantic
 #RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy the source code into docker image
@@ -20,4 +20,4 @@ COPY . /app
 RUN rm -f poetry.lock && poetry install --no-interaction -vvv
 
 # Run the server
-CMD ["poetry", "run", "uvicorn", "aikg.server:app", "--host", "0.0.0.0", "--port", "80"]
+ENTRYPOINT ["/bin/bash", "-c", "poetry run uvicorn aikg.server:app --host 0.0.0.0 --port 80"]
