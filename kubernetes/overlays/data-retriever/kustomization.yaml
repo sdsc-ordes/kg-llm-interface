@@ -5,10 +5,6 @@ resources:
 - job.yaml
 
 configMapGenerator:
-- name: files
-  files:
-  - entrypoint.sh
-  - kg-llm-interface.zip
 - name: data-retreiver-config
   envs:
   - params.env

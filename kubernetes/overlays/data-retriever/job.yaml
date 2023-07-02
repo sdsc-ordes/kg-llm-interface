@@ -17,14 +17,6 @@ spec:
           value: "servicename.servicenamespace.svc.cluster.local"
         - name: SPARQL_PORT
           value: "0"
-        volumeMounts:
-        - name: files
-          mountPath: /scripts
-        command: ["/bin/bash", "/scripts/entrypoint.sh"]
+        command: ["/bin/bash",  "/app/kubernetes/overlays/data-retriever/entrypoint.sh"]
       restartPolicy: Never
-      volumes:
-      - name: files
-        configMap:
-          name: files
-          defaultMode: 0777
   parallelism: 1

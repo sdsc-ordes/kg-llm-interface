@@ -20,9 +20,7 @@ test: ## Test the code with pytest
 .PHONY: deploy
 deploy:
 	@echo "🚀 Deploying all the services"
-	@zip -r kubernetes/overlays/data-retriever/kg-llm-interface.zip *
 	@kubectl apply -k kubernetes/overlays/data-retriever
-	#@rm kubernetes/overlays/data-retriever/kg-llm-interface.zip
 
 .PHONY: help
 help:

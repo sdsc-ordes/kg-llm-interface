@@ -7,10 +7,10 @@ FROM python:3.10-slim-bullseye
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential libopenblas-base libopenmpi-dev unzip
+RUN apt-get update && apt-get -y install python3-dev g++-11 build-essential libopenblas-base libopenmpi-dev curl
 
 # Install poetry
-RUN pip install 'poetry==1.5.0' pytest tqdm pydantic chromadb llama_index prefect prefect_dask rdflib SPARQLWrapper
+RUN pip install 'poetry==1.5.0'
 #RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy the source code into docker image
