@@ -15,7 +15,7 @@ check: ## Run code quality tools.
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@CHROMA_HOST=${CHROMA_HOST} CHROMA_PORT=${CHROMA_PORT} SPARQL_HOST=${SPARQL_HOST} SPARQL_PORT=${SPARQL_PORT} poetry run pytest
+	@CHROMA_HOST=${CHROMA_HOST} CHROMA_PORT=${CHROMA_PORT} SPARQL_ENDPOINT=http://${SPARQL_HOST}:${SPARQL_PORT}/repositories/test poetry run pytest
 
 .PHONY: deploy
 deploy:
