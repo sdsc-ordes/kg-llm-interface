@@ -113,11 +113,13 @@ def chroma_build_flow(
 def cli(
     chroma_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(help="YAML file with Chroma client configuration."),
+        typer.Option(default=None, help="YAML file with Chroma client configuration."),
     ] = None,
     sparql_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(help="YAML file with SPARQL endpoint configuration."),
+        typer.Option(
+            default=None, help="YAML file with SPARQL endpoint configuration."
+        ),
     ] = None,
 ):
     """Command line wrapper for RDF to ChromaDB index flow."""
