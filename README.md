@@ -19,6 +19,11 @@ Pipelines are used to execute one-time operations for preparing data before the 
 
 ### Insert triples
 
+```mermaid
+flowchart LR
+    RDF[RDF file] -->|insert_triples.py| SPARQL(SPARQL endpoint)
+```
+
 Insert data from an input RDF file to a SPARQL endpoint. The input file can be in any format supported by rdflib (ttl, json-ld, rdf/xlm, ...).
 
 Location: [insert_triples.py](aikg/flows/insert_triples.py):
@@ -38,6 +43,11 @@ CLI usage: `python aikg/flows/insert_triples.py`
 
 ### Chroma build
 
+```mermaid
+flowchart LR
+    SPARQL(SPARQL endpoint) -->|chroma_build.py| CHROMA(ChromaDB)
+```
+
 Build the chromaDB index from a SPARQL endpoint.
 
 Location: [chroma_build.py](aikg/flows/chroma_build.py):
@@ -49,9 +59,25 @@ Chroma and SPARQL configurations can be overriden by providing a yaml file follo
 
 ## Chat server
 
+
 The chat server can be started by running:
 
 `uvicorn --reload aikg.server:app`
+
+The final chat system (not fully implemented yet) will be work as follows:
+
+```mermaid
+sequenceDiagram
+    Front-end->>+Chat server: question
+    Chat server->>+ChromaDB: question
+    ChromaDB -->ChromaDB: embed
+    ChromaDB-->>-Chat server: ontology triples
+    Chat server-->Chat server: generate query
+    Chat server-->>+SPARQL endpoint: query
+    SPARQL endpoint-->SPARQL endpoint: run query
+    SPARQL endpoint-->>-Chat server: result
+    Chat server-->>-Front-end: answer
+```
 
 ## Containerized service
 
