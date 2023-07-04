@@ -53,25 +53,15 @@ def init_chromadb(
 
 
 @task
-def make_documents(schema_graph: Graph, instance_graphs: list[Graph]) -> list[Document]:
-    """Build and documents from instance graphs."""
-
-    loader = akrdf.CustomRDFReader()
-    # Schema injected into each instance graph to provide human readable context
-    import joblib
-
-    doc_graphs = map(lambda g: g | schema_graph, instance_graphs)
-    runner = joblib.Parallel(n_jobs=12)
-    documents = runner(joblib.delayed(loader.load_data)(g) for g in doc_graphs)
-    # Only non-empty documents are kept
-    return [doc for doc in documents if doc.text]
+def sparql_to_documents(
+    endpoint: str, user: str, password: str, graph: Optional[str] = None
+) -> list[Document]:
+    return list(
+        akrdf.split_documents_from_endpoint(endpoint, user, password, graph=graph)
+    )
 
 
 @task
-def sparql_to_documents(endpoint: str, user: str, password: str) -> list[Document]:
-    return akrdf.split_documents_from_endpoint(endpoint, user, password)
-
-
 def index_batch(batch: list[Document], chroma: ChromaVectorStore):
     """Sends a batch of document for indexing in the vector store"""
     chroma._collection.add(
@@ -85,8 +75,20 @@ def index_batch(batch: list[Document], chroma: ChromaVectorStore):
 def chroma_build_flow(
     chroma_cfg: ChromaConfig = ChromaConfig(),
     sparql_cfg: SparqlConfig = SparqlConfig(),
+    graph: Optional[str] = None,
 ):
-    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint."""
+    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint.
+
+    Parameters
+    ----------
+    chroma_cfg:
+        ChromaDB configuration.
+    sparql_cfg:
+        SPARQL endpoint configuration.
+    graph:
+        URI of named graph from which to select subjects to embed.
+        By default, all subjects are used.
+    """
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
@@ -97,12 +99,12 @@ def chroma_build_flow(
         chroma_cfg.embedding_model,
     )
 
-    docs = akrdf.split_documents_from_endpoint(
+    docs = sparql_to_documents(
         sparql_cfg.endpoint,
         sparql_cfg.user,
         sparql_cfg.password,
+        graph=graph,
     )
-    docs = list(docs)
 
     # Vectorize and index documents by batches to reduce overhead
     logger.info(f"Indexing by batches of {chroma_cfg.batch_size} instances")
@@ -121,6 +123,13 @@ def cli(
             default=None, help="YAML file with SPARQL endpoint configuration."
         ),
     ] = None,
+    graph: Annotated[
+        Optional[str],
+        typer.Option(
+            default=None,
+            help="URI of named graph from which to select triples to embed. If not set, the default graph is used.",
+        ),
+    ] = None,
 ):
     """Command line wrapper for RDF to ChromaDB index flow."""
     chroma_cfg = (
@@ -133,7 +142,7 @@ def cli(
         if sparql_cfg_path
         else SparqlConfig()
     )
-    chroma_build_flow(chroma_cfg, sparql_cfg)
+    chroma_build_flow(chroma_cfg, sparql_cfg, graph=graph)
 
 
 if __name__ == "__main__":

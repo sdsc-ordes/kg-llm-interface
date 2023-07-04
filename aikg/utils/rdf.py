@@ -31,6 +31,7 @@ WHERE
     FILTER(LANG(?pLab) = "{lang}")
     FILTER(LANG(?oLabOrVal) = "{lang}" || LANG(?oLabOrVal) = "")
     BIND (REPLACE(STR(?oLabOrVal), "^.*[#/:]([^/:#]*)$", "$1") as ?oClean)
+    {graph_mask}
 }}
 """
 
@@ -57,16 +58,37 @@ def split_conjunctive_graph_by_subject(graph: ConjunctiveGraph) -> Iterator[Grap
 
 
 def split_documents_from_endpoint(
-    endpoint: str, user: Optional[str] = None, password: Optional[str] = None
+    endpoint: str,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
+    graph: Optional[str] = None,
 ) -> Iterator[Document]:
-    """Load subject-based documents from a SPARQL endpoint."""
+    """Load subject-based documents from a SPARQL endpoint.
+
+    Parameters
+    ----------
+    endpoint:
+        URL of the SPARQL endpoint.
+    user:
+        Username to use for authentication.
+    password:
+        Password to use for authentication.
+    graph:
+        URI of named graph to load RDF data from.
+        If not specified, all subjects are used.
+    """
+
+    if graph:
+        graph_mask = f"FILTER EXISTS {{ GRAPH {graph} {{ ?s ?p ?o }} }}"
+    else:
+        graph_mask = ""
 
     # Setup sparql endpoint
     sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(CSV)
     if user and password:
         sparql.setCredentials(user, password)
-    sparql.setQuery(RDF_DOC_QUERY.format(lang="en"))
+    sparql.setQuery(RDF_DOC_QUERY.format(lang="en", graph_mask=graph_mask)))
 
     # Load the query results
     # Query results contain 6 columns:
@@ -74,7 +96,7 @@ def split_documents_from_endpoint(
     results = sparql.queryAndConvert().decode("utf-8").split("\r\n")
     # Parse csv fields
     results = map(lambda x: x.split(",", maxsplit=5), results)
-    # Exclude empty / incomplete results
+    # Exclude empty / incomplete results (e.g. missing labels)
     results = filter(lambda x: len(x) == 6, results)
     next(results)  # skip header
     results = sorted(results, key=lambda x: x[0])[1:]
