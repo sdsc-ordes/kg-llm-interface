@@ -9,56 +9,78 @@ This repository uses poetry for package management. A Makefile rule is provided 
 make install
 ```
 
+## Configuration
+
+Configuration variables are loaded from the `.env` file or environment variables. A template configuration file is provided in `.env.example`.
+
 ## Pipelines
+
+Pipelines are used to execute one-time operations for preparing data before the chat server can operate. They load their configuration from the `.env` file as well, but the variables can be overriden using yaml files (run with `--help` for more info).
+
+### Insert triples
+
+```mermaid
+flowchart LR
+    RDF[RDF file] -->|insert_triples.py| SPARQL(SPARQL endpoint)
+```
+
+Insert data from an input RDF file to a SPARQL endpoint. The input file can be in any format supported by rdflib (ttl, json-ld, rdf/xlm, ...).
+
+Location: [insert_triples.py](aikg/flows/insert_triples.py):
+
+SPARQL configuration can be overriden by providing a yaml file following the [aikg.config.sparql.SparqlConfig](aikg/config/sparql.py) schema:
+
+`python insert_triples --sparql-config-path sparql.yaml`
+
+```yaml
+# sparql.yaml
+endpoint: http://localhost:3030/ds/query
+user: admin
+password: admin
+```
+
+CLI usage: `python aikg/flows/insert_triples.py`
 
 ### Chroma build
 
-Build the chromaDB index from input RDF files.
+```mermaid
+flowchart LR
+    SPARQL(SPARQL endpoint) -->|chroma_build.py| CHROMA(ChromaDB)
+```
+
+Build the chromaDB index from a SPARQL endpoint.
 
 Location: [chroma_build.py](aikg/flows/chroma_build.py):
 
-CLI usage: `python aikg/flows/chroma_build.py location.yml`
-  + See [aikg.config.chroma.Location](aikg/config/chroma.py) for the schema of `location.yml`
+CLI usage: `python aikg/flows/chroma_build.py`
+
+Chroma and SPARQL configurations can be overriden by providing a yaml file following the [aikg.config.chroma.ChromaConfig](aikg/config/chroma.py) or [aikg.config.sparql.SparqlConfig](aikg/config/sparql.py) schemas respectively.
 
 
 ## Chat server
 
+
 The chat server can be started by running:
 
-`uvicorn aikg.server:app`
+`uvicorn --reload aikg.server:app`
+
+The final chat system (not fully implemented yet) will be work as follows:
+
+```mermaid
+sequenceDiagram
+    Front-end->>+Chat server: question
+    Chat server->>+ChromaDB: question
+    ChromaDB -->ChromaDB: embed
+    ChromaDB-->>-Chat server: ontology triples
+    Chat server-->Chat server: generate query
+    Chat server-->>+SPARQL endpoint: query
+    SPARQL endpoint-->SPARQL endpoint: run query
+    SPARQL endpoint-->>-Chat server: result
+    Chat server-->>-Front-end: answer
+```
 
 ## Containerized service
 
 :warning: WIP, not functional yet
 
-All services can be deployed together using `docker-compose`. The compose setup is as follows:
-
-```mermaid
-%%{init: {'theme': 'default'}}%%
-flowchart TB
-  chatserver[chat-server] -->|depends on| chromaserver[chroma-server]
-  chromaserver -->|depends on| clickhouse
-  P0((8001)) -.-> chatserver
-  P1((8000)) -.-> chromaserver
-  P2((8123)) -.-> clickhouse
-  P3((8999)) -.-> clickhouse
-  chatserver -.- net[/net/]
-  chromaserver -.- net
-  clickhouse -.- net
-
-  classDef ports fill:#f8f8f8,stroke:#ccc
-  class P0,P1,P2,P3 ports
-  classDef nets fill:#fbfff7,stroke:#8bc34a
-  class net nets
-```
-> figure generated with [docker-compose-viz-mermaid](https://github.com/derlin/docker-compose-viz-mermaid)
-
-```sh
-docker-compose --profile db up --build
-```
-
-If an external instance of ChromaDB is already running, set the correct values for CHROMA_HOST and CHROMA_PORT in `.env`, then run:
-
-```sh
-docker-compose up --build
-```
+The chat server can be deployed along with the front-end, SPARQL endpoint and chromaDB server using kubernetes.

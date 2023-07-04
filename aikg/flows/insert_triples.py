@@ -30,14 +30,13 @@ def insert_triples(rdf_file: Path, endpoint: SPARQLWrapper):
 
     data = Dataset()
     data.parse(rdf_file)
-    
-    query = "\n".join([f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()])
+
+    query = "\n".join(
+        [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()]
+    )
     query += f"\nINSERT DATA {{"
     query += " .\n".join(
-        [
-            f"\t\t{s.n3()} {p.n3()} {o.n3()}"
-            for (s, p, o, _) in data.quads()
-        ]
+        [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in data.quads()]
     )
     query += f" . \n\n}}\n"
     endpoint.setQuery(query)
@@ -66,12 +65,15 @@ def cli(
     rdf_file: Annotated[
         Path,
         typer.Argument(
-            help="RDF file to load into the SPARQL endpoint, in turtle or n-triples format."
+            default=None,
+            help="RDF file to load into the SPARQL endpoint, in turtle or n-triples format.",
         ),
     ],
     sparql_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(help="YAML file with SPARQL endpoint configuration."),
+        typer.Option(
+            default=None, help="YAML file with SPARQL endpoint configuration."
+        ),
     ] = None,
 ):
     """Command line wrapper to insert triples to a SPARQL endpoint."""
