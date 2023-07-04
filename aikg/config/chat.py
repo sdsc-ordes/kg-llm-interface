@@ -22,16 +22,37 @@ class ChatConfig(BaseModel):
     num_output: int = 256
     max_chunk_overlap: int = 20
 
-    prompt_template: str = (
-        "We have provided the contextual facts below.\n"
-        "-----------------\n"
-        "{context_str}\n"
-        "-----------------\n"
-        "Answer the question using only the context and no "
-        "prior knowledge. If the context does not contain any fact related to "
-        "the question, simply answer the words 'Not found'. The answer should be "
-        "maximum 2 sentences directly reflecting the facts from relevant facts while ignoring "
-        "irrelevant ones.\n"
-        "Question: {query_str}"
-        "Answer: "
-    )
+    prompt_template: str = """
+We have provided the contextual facts below.
+-----------------
+{context_str}
+-----------------
+Answer the question using only the context and no
+prior knowledge. If the context does not contain any fact related to
+the question, simply answer the words 'Not found'. The answer should be
+maximum 2 sentences directly reflecting the facts from relevant facts while ignoring
+irrelevant ones.
+Question: {query_str}
+Answer:
+    """
+
+    sparql_prompt_template: str = """
+Use the question and the additional information to generate a sparql query against a knowledge graph where the p and q items are
+completely unknown to you. You will need to discover the p and q items before you can generate the sparql.
+Do not assume you know the p and q items for any concepts.
+After you generate the sparql, you should display it.
+
+When generating sparql:
+* Never enclose the sparql in back-quotes
+
+
+Use the following format:
+
+Question: the input question for which you must provide a natural language answer
+Information: the additional information you get with the query, in RDF format. This will help you generate the sparql query with the correct format.
+
+Question: {query_str}
+Information:
+{context_str}
+Answer:
+"""

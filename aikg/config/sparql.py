@@ -18,4 +18,3 @@ class SparqlConfig(BaseModel):
 
     user: str = os.environ.get("SPARQL_USER", "admin")
     password: str = os.environ.get("SPARQL_PASSWORD", "admin")
-
