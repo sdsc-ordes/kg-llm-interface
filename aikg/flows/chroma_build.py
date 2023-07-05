@@ -1,9 +1,12 @@
 """This flow builds a ChromaDB vector index from RDF data in a SPARQL endpoint.
 
-The RDF data is split into "documents" consisting of triples with the same
-subject. The documents are then vectorized using a language model and
-stored in a vector (key-value) index. The index is persisted to disk and
-can be subsequently loaded into memory for querying."""
+For each subject in the target graph, a document is generated. The document consists of:
+* A human readable body made up of the annotations (rdfs:comment, rdf:label) associated with the subject.
+* Triples with the subject attached as metadata.
+
+The documents are then stored in a vector database. The embedding is computed using the document body,
+and triples included as metadata. The index is persisted to disk and can be subsequently loaded into memory
+for querying."""
 
 from pathlib import Path
 from typing import Iterator, Optional
@@ -21,6 +24,7 @@ from prefect import get_run_logger, unmapped
 from prefect_dask.task_runners import DaskTaskRunner
 from rdflib import ConjunctiveGraph, Graph
 from requests import HTTPError
+from SPARQLWrapper import SPARQLWrapper
 from tqdm import tqdm
 import typer
 
@@ -29,6 +33,7 @@ from aikg.config.sparql import SparqlConfig
 from aikg.config.common import parse_yaml_config
 from aikg.utils.chroma import get_chroma_client
 import aikg.utils.rdf as akrdf
+from aikg.utils.chroma import setup_chroma
 
 
 @task
@@ -36,29 +41,16 @@ def init_chromadb(
     host: str, port: int, collection_name: str, embedding_model: str
 ) -> ChromaVectorStore:
     """Prepare chromadb client."""
-    from chromadb.utils import embedding_functions
+    collection = setup_chroma(host, port, collection_name, embedding_model)
 
-    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=embedding_model
-    )
-    chroma_client = get_chroma_client(host, port)
-    try:
-        chroma_client.delete_collection(collection_name)
-    except (HTTPError, Exception) as _:
-        pass
-    collection = chroma_client.get_or_create_collection(
-        collection_name, embedding_function=embedding_function
-    )
     return ChromaVectorStore(chroma_collection=collection)
 
 
 @task
 def sparql_to_documents(
-    endpoint: str, user: str, password: str, graph: Optional[str] = None
+    kg: Graph | SPARQLWrapper, graph: Optional[str] = None
 ) -> list[Document]:
-    return list(
-        akrdf.split_documents_from_endpoint(endpoint, user, password, graph=graph)
-    )
+    return list(akrdf.split_documents_from_endpoint(kg, graph=graph))
 
 
 @task
@@ -92,17 +84,13 @@ def chroma_build_flow(
     load_dotenv()
     logger = get_run_logger()
     logger.info("INFO Started")
-    chroma = init_chromadb(
-        chroma_cfg.host,
-        chroma_cfg.port,
-        chroma_cfg.collection_name,
-        chroma_cfg.embedding_model,
-    )
+    # Connect to external resources
+    chroma = init_chromadb(**chroma_cfg.dict())
+    kg = akrdf.setup_kg(**sparql_cfg.dict())
 
+    # Create subject documents
     docs = sparql_to_documents(
-        sparql_cfg.endpoint,
-        sparql_cfg.user,
-        sparql_cfg.password,
+        kg,
         graph=graph,
     )
 
