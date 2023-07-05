@@ -1,5 +1,6 @@
 import chromadb
 from chromadb.config import Settings
+from chromadb.api import Collection
 from fastapi import FastAPI
 from llama_index.vector_stores import ChromaVectorStore
 from requests import HTTPError
@@ -36,23 +37,3 @@ def setup_chroma(
         collection_name, embedding_function=embedding_function
     )
     return collection
-
-
-def init_chromadb(
-    host: str, port: int, collection_name: str, embedding_model: str
-) -> ChromaVectorStore:
-    """Prepare chromadb client."""
-    from chromadb.utils import embedding_functions
-
-    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=embedding_model
-    )
-    chroma_client = get_chroma_client(host, port)
-    try:
-        chroma_client.delete_collection(collection_name)
-    except (HTTPError, Exception) as _:
-        pass
-    collection = chroma_client.get_or_create_collection(
-        collection_name, embedding_function=embedding_function
-    )
-    return ChromaVectorStore(chroma_collection=collection)
