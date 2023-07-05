@@ -11,27 +11,20 @@ for querying."""
 from pathlib import Path
 from typing import Iterator, Optional
 from typing_extensions import Annotated
-import urllib.parse
 
-import chromadb
-from chromadb.config import Settings
+from chromadb.api import Collection
 from dotenv import load_dotenv
-from llama_index.vector_stores import ChromaVectorStore
 from llama_index import Document
 from more_itertools import chunked
 from prefect import flow, task
-from prefect import get_run_logger, unmapped
-from prefect_dask.task_runners import DaskTaskRunner
+from prefect import get_run_logger
 from rdflib import ConjunctiveGraph, Graph
-from requests import HTTPError
 from SPARQLWrapper import SPARQLWrapper
-from tqdm import tqdm
 import typer
 
 from aikg.config.chroma import ChromaConfig
 from aikg.config.sparql import SparqlConfig
 from aikg.config.common import parse_yaml_config
-from aikg.utils.chroma import get_chroma_client
 import aikg.utils.rdf as akrdf
 from aikg.utils.chroma import setup_chroma
 
@@ -39,24 +32,24 @@ from aikg.utils.chroma import setup_chroma
 @task
 def init_chromadb(
     host: str, port: int, collection_name: str, embedding_model: str
-) -> ChromaVectorStore:
+) -> Collection:
     """Prepare chromadb client."""
-    collection = setup_chroma(host, port, collection_name, embedding_model)
+    coll = setup_chroma(host, port, collection_name, embedding_model)
 
-    return ChromaVectorStore(chroma_collection=collection)
+    return coll
 
 
 @task
 def sparql_to_documents(
     kg: Graph | SPARQLWrapper, graph: Optional[str] = None
 ) -> list[Document]:
-    return list(akrdf.split_documents_from_endpoint(kg, graph=graph))
+    return list(akrdf.get_subjects_docs(kg, graph=graph))
 
 
 @task
-def index_batch(batch: list[Document], chroma: ChromaVectorStore):
+def index_batch(batch: list[Document]):
     """Sends a batch of document for indexing in the vector store"""
-    chroma._collection.add(
+    coll.add(
         ids=[doc.doc_id for doc in batch],
         documents=[doc.text for doc in batch],
         metadatas=[doc.extra_info for doc in batch],
@@ -85,8 +78,18 @@ def chroma_build_flow(
     logger = get_run_logger()
     logger.info("INFO Started")
     # Connect to external resources
-    chroma = init_chromadb(**chroma_cfg.dict())
-    kg = akrdf.setup_kg(**sparql_cfg.dict())
+    global coll
+    coll = init_chromadb(
+        chroma_cfg.host,
+        chroma_cfg.port,
+        chroma_cfg.collection_name,
+        chroma_cfg.embedding_model,
+    )
+    kg = akrdf.setup_kg(
+        sparql_cfg.endpoint,
+        user=sparql_cfg.user,
+        password=sparql_cfg.password,
+    )
 
     # Create subject documents
     docs = sparql_to_documents(
@@ -97,7 +100,7 @@ def chroma_build_flow(
     # Vectorize and index documents by batches to reduce overhead
     logger.info(f"Indexing by batches of {chroma_cfg.batch_size} instances")
     for batch in chunked(docs, chroma_cfg.batch_size):
-        index_batch(batch, chroma)
+        index_batch(batch)
 
 
 def cli(

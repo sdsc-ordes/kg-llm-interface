@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional
 from llama_index.readers.base import BaseReader
 from llama_index.readers.schema.base import Document
 from rdflib import ConjunctiveGraph, Graph
+from rdflib.exceptions import ParserError
 from SPARQLWrapper import SPARQLWrapper, CSV
 from urllib.parse import urlparse
 
@@ -39,7 +40,7 @@ WHERE
 SUBJECT_DOC_QUERY = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?s ?sLab ?sCom
+SELECT DISTINCT ?s ?sLab ?sCom
 WHERE
 {{
     ?s rdfs:label ?sLab .
@@ -140,8 +141,8 @@ def get_subjects_docs(
         g = Graph()
         # SPARQLWrapper returns a ntriple string, rdflib a list of triples
         try:
-            g.parse(data=triples[0][0])
-        except RuntimeError:
+            g.parse(data=triples[0][0], format="nt")
+        except (RuntimeError, ParserError):
             for triple in triples:
                 g.add(triple)
         meta = {"triples": g.serialize(format="ttl")}
