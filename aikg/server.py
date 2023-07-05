@@ -47,7 +47,12 @@ def generate_sparql(
     return query
 
 
-collection = setup_chroma(**chroma_config.dict())
+collection = setup_chroma(
+    chroma_config.host,
+    chroma_config.port,
+    chroma_config.collection_name,
+    chroma_config.embedding_model,
+)
 llm = setup_llm(chat_config.model_id, chat_config.max_new_tokens)
 # For now, both chains share the same model to spare memory
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
