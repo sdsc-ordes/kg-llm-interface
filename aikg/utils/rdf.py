@@ -47,11 +47,18 @@ WHERE
         ?s rdfs:comment ?sCom .
         ?o rdfs:label ?oLab .
     }}
-    FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")))
-    FILTER(LANG(?sCom) = "{lang}" || LANG(?sLab) = "")))
+    FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
+    FILTER(LANG(?sCom) = "{lang}" || LANG(?sLab) = "")
     {graph_mask}
 }}
 """
+
+
+def make_graph_mask(graph: Optional[str] = None) -> str:
+    if graph:
+        return f"FILTER EXISTS {{ GRAPH {graph} {{ ?s ?p ?o }} }}"
+    else:
+        return ""
 
 
 def setup_kg(
@@ -90,10 +97,7 @@ def split_documents_from_endpoint(
         If not specified, all subjects are used.
     """
 
-    if graph:
-        graph_mask = f"FILTER EXISTS {{ GRAPH {graph} {{ ?s ?p ?o }} }}"
-    else:
-        graph_mask = ""
+    graph_mask = make_graph_mask(graph)
 
     # Load the query results
     # Query results contain 6 columns:
@@ -114,13 +118,16 @@ def split_documents_from_endpoint(
 
 
 def get_subjects_docs(
-    kg: Graph | SPARQLWrapper, col: "chromadb.Collection", graph: Optional[str] = None
-):
+    kg: Graph | SPARQLWrapper, graph: Optional[str] = None
+) -> List[Document]:
     """Given an RDF graph, iterate over subjects, extract human-readable
     RDFS annotations. For each subject, retrieve a "text document" with
     original triples attached as metadata."""
 
-    results = query_kg(kg, SUBJECT_DOC_QUERY.format(lang="en", graph_mask=graph))
+    results = query_kg(
+        kg, SUBJECT_DOC_QUERY.format(lang="en", graph_mask=make_graph_mask(graph))
+    )
+    docs = []
     for sub, label, comment in results:
         if comment is None:
             comment = ""
@@ -138,7 +145,8 @@ def get_subjects_docs(
             for triple in triples:
                 g.add(triple)
         meta = {"triples": g.serialize(format="ttl")}
-        yield Document(text, extra_info=meta)
+        docs.append(Document(text, extra_info=meta))
+    return docs
 
 
 def query_kg(kg: Graph | SPARQLWrapper, query: str) -> List[List[Any]]:
