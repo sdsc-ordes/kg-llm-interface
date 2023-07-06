@@ -1,3 +1,4 @@
+import re
 from typing import Any, List, Mapping, Optional
 
 from llama_index import LangchainEmbedding, PromptHelper
@@ -24,9 +25,10 @@ def setup_llm(model_id: str, max_new_tokens: int):
 
 def setup_llm_chain(llm: HuggingFacePipeline, prompt_template: str) -> LLMChain:
     """Prepare the prompt injection and text generation system."""
-
+    # Auto-detecting prompt variables surrounded by single curly braces
+    variables = re.findall(r'[^{]({[^}]+})[^}]', prompt_template)
     prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["context_str", "query_str"],
+        input_variables=variables,
     )
     return LLMChain(prompt=prompt, llm=llm)
