@@ -11,8 +11,10 @@ from chromadb.api import Collection
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain import LLMChain
+from pathlib import Path
 from rdflib import Graph
 
+from aikg.config.common import parse_yaml_config
 import aikg.config.chroma
 import aikg.config.chat
 import aikg.config.sparql
@@ -24,12 +26,16 @@ from aikg.utils.rdf import setup_kg, query_kg
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-
 load_dotenv()
 chroma_config = aikg.config.chroma.ChromaConfig()
-chat_config = aikg.config.chat.ChatConfig()
 sparql_config = aikg.config.sparql.SparqlConfig()
-
+if os.environ.get("CHAT_CONFIG"):
+    chat_config = parse_yaml_config(
+        Path(os.environ['CHAT_CONFIG']),
+        aikg.config.chat.ChatConfig
+    )
+else:
+    chat_config = aikg.config.chat.ChatConfig()
 
 def generate_sparql(
     question: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
