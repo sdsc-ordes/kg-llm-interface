@@ -1,5 +1,5 @@
 
-model_id: chainyo/alpaca-lora-7b
+model_id: lmsys/vicuna-7b-v1.3
 answer_template: |
   The following describe a user question, associated SPARQL query and the result from the query.
   Based on this information, write an answer in simple terms that describes the results.

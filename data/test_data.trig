@@ -1,0 +1,254 @@
+@prefix ex: <https://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:ontology {
+    schema1:Organization a rdfs:Class ;
+        rdfs:label "Organization" ;
+        rdfs:comment "An organization such as a school, NGO, corporation, club, etc." .
+
+    schema1:Person a rdfs:Class ;
+        rdfs:label "Person" ;
+        rdfs:comment "A person (alive, dead, undead, or fictional)." .
+
+    schema1:SoftwareSourceCode a rdfs:Class ;
+        rdfs:label "SoftwareSourceCode" ;
+        rdfs:comment "Computer programming source code. Example: Full (compile ready) solutions, code snippet samples, scripts, templates." ;
+        rdfs:subClassOf schema1:CreativeWork .
+
+    schema1:affiliation a rdf:Property ;
+        rdfs:label "affiliation" ;
+        rdfs:comment "An organization that this person is affiliated with. For example, a school/university, a club, or a team." ;
+        rdfs:domain schema1:Person ;
+        rdfs:range schema1:Organization .
+
+    schema1:author a rdf:Property ;
+        rdfs:label "author" ;
+        rdfs:comment "The author of this content or rating." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range schema1:Person .
+
+    schema1:datePublished a rdf:Property ;
+        rdfs:label "datePublished" ;
+        rdfs:comment "Date of first broadcast/publication." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:date .
+
+    schema1:description a rdf:Property ;
+        rdfs:label "description" ;
+        rdfs:comment "A description of the item." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:string .
+
+    schema1:keywords a rdf:Property ;
+        rdfs:label "keywords" ;
+        rdfs:comment "Keywords or tags used to describe some item. Multiple textual entries in a keywords list are typically delimited by commas, or by repeating the property." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:string .
+
+    schema1:license a rdf:Property ;
+        rdfs:label "license" ;
+        rdfs:comment "A license document that applies to this content, typically indicated by URL." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:anyUri,
+            xsd:string .
+
+    schema1:name a rdf:Property ;
+        rdfs:label "name" ;
+        rdfs:comment "The name of the item." ;
+        rdfs:domain schema1:Organization,
+            schema1:Person,
+            schema1:SoftwareSourceCode ;
+        rdfs:range xsd:string .
+
+    schema1:programmingLanguage a rdf:Property ;
+        rdfs:label "programming language" ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:string .
+}
+
+
+<https://github.com/SDSC-ORD/gimie> a schema1:SoftwareSourceCode ;
+    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/gimie> ;
+    schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:contributor <https://github.com/cmdoret>,
+        <https://github.com/martinfontanet>,
+        <https://github.com/rmfranken>,
+        <https://github.com/sabinem>,
+        <https://github.com/sabrinaossey>,
+        <https://github.com/supermaxiste>,
+        <https://github.com/vancauwe> ;
+    schema1:dateCreated "2022-12-07" ;
+    schema1:dateModified "2023-06-07" ;
+    schema1:description "Extract linked metadata from repositories" ;
+    schema1:downloadUrl "https://github.com/SDSC-ORD/gimie/archive/refs/tags/0.5.0.tar.gz" ;
+    schema1:keywords "fair-data",
+        "git",
+        "linked-open-data",
+        "metadata-extraction",
+        "python",
+        "scientific-software" ;
+    schema1:license <https://spdx.org/licenses/Apache-2.0> ;
+    schema1:programmingLanguage "Python" ;
+    schema1:version "0.5.0" .
+
+<https://github.com/EPFL-Data-Champions> a schema1:Organization ;
+    schema1:description "Cross-disciplinary community around research data, voluntary EPFL's researchers and staff with keen interest in research data." ;
+    schema1:legalName "EPFL Data Champions" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/78474394?v=4> ;
+    schema1:name "EPFL-Data-Champions" .
+
+<https://github.com/biocypher> a schema1:Organization ;
+    schema1:description "" ;
+    schema1:legalName "biocypher" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/128412897?v=4> ;
+    schema1:name "biocypher" .
+
+<https://github.com/cmdoret> a schema1:Person ;
+    schema1:affiliation <https://github.com/EPFL-Data-Champions>,
+        <https://github.com/SDSC-ORD>,
+        <https://github.com/SwissDataScienceCenter>,
+        <https://github.com/koszullab> ;
+    schema1:identifier "cmdoret" ;
+    schema1:name "Cyril Matthey-Doret" .
+
+<https://github.com/koszullab> a schema1:Organization ;
+    schema1:description "" ;
+    schema1:legalName "Romain Koszul Laboratory" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/9391430?v=4> ;
+    schema1:name "koszullab" .
+
+<https://github.com/martinfontanet> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD>,
+        <https://github.com/SwissDataScienceCenter> ;
+    schema1:identifier "martinfontanet" .
+
+<https://github.com/rmfranken> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD> ;
+    schema1:identifier "rmfranken" .
+
+<https://github.com/sabinem> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD> ;
+    schema1:identifier "sabinem" ;
+    schema1:name "Sabine Maennel" .
+
+<https://github.com/sabrinaossey> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD>,
+        <https://github.com/SwissDataScienceCenter> ;
+    schema1:identifier "sabrinaossey" ;
+    schema1:name "sabrinaossey" .
+
+<https://github.com/supermaxiste> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD>,
+        <https://github.com/biocypher> ;
+    schema1:identifier "supermaxiste" .
+
+<https://github.com/vancauwe> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD> ;
+    schema1:identifier "vancauwe" ;
+    schema1:name "Laure Vancau" .
+
+<https://github.com/SwissDataScienceCenter> a schema1:Organization ;
+    schema1:description "An ETH Domain initiative for accelerating the adoption of data science" ;
+    schema1:legalName "Swiss Data Science Center" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/25008760?v=4> ;
+    schema1:name "SwissDataScienceCenter" .
+
+<https://github.com/SDSC-ORD> a schema1:Organization ;
+    schema1:description "Open Research Data team at the Swiss Data Science Center." ;
+    schema1:legalName "Swiss Data Science Center - ORD" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/114115753?v=4> ;
+    schema1:name "SDSC-ORD" .
+
+
+
+<https://github.com/SDSC-ORD/kg-llm-interface> a schema1:SoftwareSourceCode ;
+    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/kg-llm-interface> ;
+    schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:contributor <https://github.com/cmdoret> ;
+    schema1:dateCreated "2023-04-19" ;
+    schema1:dateModified "2023-07-05" ;
+    schema1:description "Langchain-powered natural language interface to RDF knowledge-graphs." ;
+    schema1:license <https://spdx.org/licenses/Apache-2.0> ;
+    schema1:programmingLanguage "Jupyter Notebook" .
+
+<https://github.com/EPFL-Data-Champions> a schema1:Organization ;
+    schema1:description "Cross-disciplinary community around research data, voluntary EPFL's researchers and staff with keen interest in research data." ;
+    schema1:legalName "EPFL Data Champions" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/78474394?v=4> ;
+    schema1:name "EPFL-Data-Champions" .
+
+<https://github.com/SwissDataScienceCenter> a schema1:Organization ;
+    schema1:description "An ETH Domain initiative for accelerating the adoption of data science" ;
+    schema1:legalName "Swiss Data Science Center" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/25008760?v=4> ;
+    schema1:name "SwissDataScienceCenter" .
+
+<https://github.com/cmdoret> a schema1:Person ;
+    schema1:affiliation <https://github.com/EPFL-Data-Champions>,
+        <https://github.com/SDSC-ORD>,
+        <https://github.com/SwissDataScienceCenter>,
+        <https://github.com/koszullab> ;
+    schema1:identifier "cmdoret" ;
+    schema1:name "Cyril Matthey-Doret" .
+
+<https://github.com/koszullab> a schema1:Organization ;
+    schema1:description "" ;
+    schema1:legalName "Romain Koszul Laboratory" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/9391430?v=4> ;
+    schema1:name "koszullab" .
+
+<https://github.com/SDSC-ORD> a schema1:Organization ;
+    schema1:description "Open Research Data team at the Swiss Data Science Center." ;
+    schema1:legalName "Swiss Data Science Center - ORD" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/114115753?v=4> ;
+    schema1:name "SDSC-ORD" .
+
+
+
+<https://github.com/SDSC-ORD/zarr_linked_data> a schema1:SoftwareSourceCode ;
+    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/zarr_linked_data> ;
+    schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:contributor <https://github.com/vancauwe> ;
+    schema1:dateCreated "2023-04-06" ;
+    schema1:dateModified "2023-05-09" ;
+    schema1:description "The project seeks to make a dataflow composed both of the Zarr data format and linked metadata." ;
+    schema1:license <https://spdx.org/licenses/MIT> ;
+    schema1:programmingLanguage "Python" .
+
+<https://github.com/vancauwe> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD> ;
+    schema1:identifier "vancauwe" ;
+    schema1:name "Laure Vancau" .
+
+<https://github.com/SDSC-ORD> a schema1:Organization ;
+    schema1:description "Open Research Data team at the Swiss Data Science Center." ;
+    schema1:legalName "Swiss Data Science Center - ORD" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/114115753?v=4> ;
+    schema1:name "SDSC-ORD" .
+
+<https://github.com/SDSC-ORD/pxRRead> a schema1:SoftwareSourceCode ;
+    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/pxRRead> ;
+    schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:contributor <https://github.com/sabinem> ;
+    schema1:dateCreated "2023-02-20" ;
+    schema1:dateModified "2023-06-02" ;
+    schema1:description "Read a px file of fso statistical data" ;
+    schema1:keywords "parsing",
+        "statistical-data" ;
+    schema1:license <https://spdx.org/licenses/NOASSERTION> ;
+    schema1:programmingLanguage "R" .
+
+<https://github.com/sabinem> a schema1:Person ;
+    schema1:affiliation <https://github.com/SDSC-ORD> ;
+    schema1:identifier "sabinem" ;
+    schema1:name "Sabine Maennel" .
+
+<https://github.com/SDSC-ORD> a schema1:Organization ;
+    schema1:description "Open Research Data team at the Swiss Data Science Center." ;
+    schema1:legalName "Swiss Data Science Center - ORD" ;
+    schema1:logo <https://avatars.githubusercontent.com/u/114115753?v=4> ;
+    schema1:name "SDSC-ORD" .
+
