@@ -12,7 +12,13 @@ def get_chroma_client(host: str, port: int, persist_directory: Optional[str] = N
     """Prepare chromadb client."""
 
     if host == "local":
-        chroma_client = chromadb.Client(Settings(persist_directory=persist_directory))
+        chroma_client = chromadb.Client(
+            Settings(
+                chroma_db_impl="duckdb+parquet",
+                persist_directory=persist_directory,
+                anonymized_telemetry=False,
+            )
+        )
     else:
         # Connect to vector db server
         chroma_client = chromadb.Client(
