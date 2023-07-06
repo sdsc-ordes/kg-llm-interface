@@ -57,7 +57,7 @@ WHERE
 
 def make_graph_mask(graph: Optional[str] = None) -> str:
     if graph:
-        return f"FILTER EXISTS {{ GRAPH {graph} {{ ?s ?p ?o }} }}"
+        return f"FILTER EXISTS {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}"
     else:
         return ""
 
@@ -75,7 +75,8 @@ def setup_kg(
         if user and password:
             kg.setCredentials(user, password)
     else:
-        kg = Graph().parse(endpoint)
+        kg = ConjunctiveGraph()
+        kg.parse(endpoint)
     return kg
 
 

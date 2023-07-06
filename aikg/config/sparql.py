@@ -5,8 +5,7 @@ from pydantic import BaseModel
 class SparqlConfig(BaseModel):
     """
     Attributes:
-        host: The host of the SPARQL endpoint.
-        port: The port of the SPARQL endpoint.
+        endpoint: The SPARQL endpoint to connect to. Can also be a local path to an RDF file.
         repo: The name of the repository or dataset to query.
         user: The username to use for authentication.
         password: The password to use for authentication.

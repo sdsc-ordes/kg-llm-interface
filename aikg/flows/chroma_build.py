@@ -30,11 +30,9 @@ from aikg.utils.chroma import setup_chroma
 
 
 @task
-def init_chromadb(
-    host: str, port: int, collection_name: str, embedding_model: str
-) -> Collection:
+def init_chromadb(*args, **kwargs) -> Collection:
     """Prepare chromadb client."""
-    coll = setup_chroma(host, port, collection_name, embedding_model)
+    coll = setup_chroma(*args, **kwargs)
 
     return coll
 
@@ -84,6 +82,7 @@ def chroma_build_flow(
         chroma_cfg.port,
         chroma_cfg.collection_name,
         chroma_cfg.embedding_model,
+        chroma_cfg.persist_directory,
     )
     kg = akrdf.setup_kg(
         sparql_cfg.endpoint,
@@ -98,9 +97,12 @@ def chroma_build_flow(
     )
 
     # Vectorize and index documents by batches to reduce overhead
-    logger.info(f"Indexing by batches of {chroma_cfg.batch_size} instances")
+    logger.info(f"Indexing by batches of {chroma_cfg.batch_size} items")
+    embed_counter = 0
     for batch in chunked(docs, chroma_cfg.batch_size):
+        embed_counter += len(batch)
         index_batch(batch)
+    logger.info(f"Indexed {embed_counter} items.")
 
 
 def cli(
