@@ -22,8 +22,7 @@ from rdflib import ConjunctiveGraph, Graph
 from SPARQLWrapper import SPARQLWrapper
 import typer
 
-from aikg.config.chroma import ChromaConfig
-from aikg.config.sparql import SparqlConfig
+from aikg.config import ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
 import aikg.utils.rdf as akrdf
 import aikg.utils.chroma as akchroma

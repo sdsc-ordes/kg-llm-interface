@@ -9,7 +9,7 @@ from SPARQLWrapper import SPARQLWrapper
 import typer
 
 from aikg.config.common import parse_yaml_config
-from aikg.config.sparql import SparqlConfig
+from aikg.config import SparqlConfig
 
 
 @task

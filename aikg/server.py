@@ -12,35 +12,34 @@ from fastapi import FastAPI
 from pathlib import Path
 from rdflib import Graph
 
+from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
-import aikg.config.chroma
-import aikg.config.chat
-import aikg.config.sparql
 from aikg.models import Conversation, Message
 from aikg.utils.chat import post_process_answer, generate_sparql
 from aikg.utils.llm import setup_llm_chain, setup_llm
-from aikg.utils.chroma import setup_chroma
+from aikg.utils.chroma import setup_collection, setup_client
 from aikg.utils.rdf import setup_kg, query_kg
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 load_dotenv()
-chroma_config = aikg.config.chroma.ChromaConfig()
-sparql_config = aikg.config.sparql.SparqlConfig()
+chroma_config = ChromaConfig()
+sparql_config = SparqlConfig()
 if os.environ.get("CHAT_CONFIG"):
-    chat_config = parse_yaml_config(
-        Path(os.environ["CHAT_CONFIG"]), aikg.config.chat.ChatConfig
-    )
+    chat_config = parse_yaml_config(Path(os.environ["CHAT_CONFIG"]), ChatConfig)
 else:
-    chat_config = aikg.config.chat.ChatConfig()
+    chat_config = ChatConfig()
 
 
-collection = setup_chroma(
+client = setup_client(
     chroma_config.host,
     chroma_config.port,
+    chroma_config.persist_directory,
+)
+collection = setup_collection(
+    client,
     chroma_config.collection_name,
     chroma_config.embedding_model,
-    chroma_config.persist_directory,
 )
 llm = setup_llm(chat_config.model_id, chat_config.max_new_tokens)
 # For now, both chains share the same model to spare memory
