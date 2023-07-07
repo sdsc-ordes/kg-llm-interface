@@ -56,7 +56,6 @@ def generate_answer(
     query: str,
     results: Iterable[Any],
     llm_chain: LLMChain,
-    limit: int = 5,
 ) -> str:
     """
     Given a question, associated SPARQL query and execution result,
