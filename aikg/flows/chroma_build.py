@@ -9,10 +9,10 @@ and triples included as metadata. The index is persisted to disk and can be subs
 for querying."""
 
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Optional, Tuple
 from typing_extensions import Annotated
 
-from chromadb.api import Collection
+from chromadb.api import API, Collection
 from dotenv import load_dotenv
 from llama_index import Document
 from more_itertools import chunked
@@ -26,15 +26,22 @@ from aikg.config.chroma import ChromaConfig
 from aikg.config.sparql import SparqlConfig
 from aikg.config.common import parse_yaml_config
 import aikg.utils.rdf as akrdf
-from aikg.utils.chroma import setup_chroma
+import aikg.utils.chroma as akchroma
 
 
 @task
-def init_chromadb(*args, **kwargs) -> Collection:
+def init_chromadb(
+    host: str,
+    port: int,
+    collection_name: str,
+    embedding_model: str,
+    persist_directory: str,
+) -> Tuple[API, Collection]:
     """Prepare chromadb client."""
-    coll = setup_chroma(*args, **kwargs)
+    client = akchroma.setup_client(host, port, persist_directory=persist_directory)
+    coll = akchroma.setup_collection(client, collection_name, embedding_model)
 
-    return coll
+    return client, coll
 
 
 @task
@@ -77,7 +84,7 @@ def chroma_build_flow(
     logger.info("INFO Started")
     # Connect to external resources
     global coll
-    coll = init_chromadb(
+    client, coll = init_chromadb(
         chroma_cfg.host,
         chroma_cfg.port,
         chroma_cfg.collection_name,
@@ -103,6 +110,7 @@ def chroma_build_flow(
         embed_counter += len(batch)
         index_batch(batch)
     logger.info(f"Indexed {embed_counter} items.")
+    client.persist()
 
 
 def cli(
