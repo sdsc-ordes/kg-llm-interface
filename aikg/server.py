@@ -15,7 +15,7 @@ from rdflib import Graph
 from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
 from aikg.models import Conversation, Message
-from aikg.utils.chat import post_process_answer, generate_sparql
+from aikg.utils.chat import generate_answer, generate_sparql
 from aikg.utils.llm import setup_llm_chain, setup_llm
 from aikg.utils.chroma import setup_collection, setup_client
 from aikg.utils.rdf import setup_kg, query_kg
@@ -54,32 +54,29 @@ def index():
     return {
         "title": "Hello, welcome to the knowledge graph chatbot!",
         "description": "This is a simple chatbot that uses a knowledge graph to answer questions.",
-        "usage": "Ask a single question using /ask?question='...', or POST a Conversation object to /chat.",
+        "usage": "Ask a single question using /ask?question='...', or only generate the query using /sparql?question='...'.",
     }
 
 
-@app.post("/chat")
-async def chat(conversation: Conversation) -> Conversation:
-    # question = conversation.thread[-1].text
-    # answer = ...
-    # conversation.thread.append(answer)
-    # return conversation
-    ...
-
-
-@app.get("/ask/")
+@app.get("/test/")
 async def test(question: str) -> Message:
     return Message(text="Hello, world!", sender="AI", time=datetime.now())
 
 
-@app.get("/sparql/")
-async def sparql(question: str) -> Message:
-    """TODO: Generate sparql query from question
-    and execute sparql query on kg."""
+@app.get("/ask/")
+async def ask(question: str) -> Message:
+    """Generate sparql query from question
+    and execute query on kg and return an answer based on results."""
     ...
     query = generate_sparql(question, collection, sparql_chain)
     results = query_kg(kg, query)
-    return Message(text=str(results), sender="AI", time=datetime.now())
-    # answer = llm_chain.run(query_str=query, context_str=context)
-    # answer = post_process_answer(answer)
-    # return Message(text=answer, sender="AI", time=datetime.now())
+    answer = generate_answer(question, query, results, answer_chain)
+    return Message(text=answer, sender="AI", time=datetime.now())
+
+
+@app.get("/sparql/")
+async def sparql(question: str) -> Message:
+    """Generate and return sparql query from question."""
+    ...
+    query = generate_sparql(question, collection, sparql_chain)
+    return Message(text=query, sender="AI", time=datetime.now())
