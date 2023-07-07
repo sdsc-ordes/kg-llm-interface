@@ -65,14 +65,22 @@ ex:ontology {
 
     schema1:programmingLanguage a rdf:Property ;
         rdfs:label "programming language" ;
+        rdfs:comment "The computer programming language." ;
         rdfs:domain schema1:SoftwareSourceCode ;
         rdfs:range xsd:string .
+
+    schema1:codeRepository a rdf:Property ;
+        rdfs:label "codeRepository" ;
+        rdfs:comment "Link to the repository where the un-compiled, human readable code and related code is located (SVN, GitHub, CodePlex)." ;
+        rdfs:domain schema1:SoftwareSourceCode ;
+        rdfs:range xsd:anyUri .
 }
 
 
 <https://github.com/SDSC-ORD/gimie> a schema1:SoftwareSourceCode ;
-    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/gimie> ;
+    schema1:codeRepository <https://github.com/SDSC-ORD/gimie> ;
     schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:name "SDSC-ORD/gimie" ;
     schema1:contributor <https://github.com/cmdoret>,
         <https://github.com/martinfontanet>,
         <https://github.com/rmfranken>,
@@ -165,8 +173,9 @@ ex:ontology {
 
 
 <https://github.com/SDSC-ORD/kg-llm-interface> a schema1:SoftwareSourceCode ;
-    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/kg-llm-interface> ;
+    schema1:codeRepository <https://github.com/SDSC-ORD/kg-llm-interface> ;
     schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:name "SDSC-ORD/kg-llm-interface" ;
     schema1:contributor <https://github.com/cmdoret> ;
     schema1:dateCreated "2023-04-19" ;
     schema1:dateModified "2023-07-05" ;
@@ -209,8 +218,9 @@ ex:ontology {
 
 
 <https://github.com/SDSC-ORD/zarr_linked_data> a schema1:SoftwareSourceCode ;
-    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/zarr_linked_data> ;
+    schema1:codeRepository <https://github.com/SDSC-ORD/zarr_linked_data> ;
     schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:name "SDSC-ORD/zarr_linked_data" ;
     schema1:contributor <https://github.com/vancauwe> ;
     schema1:dateCreated "2023-04-06" ;
     schema1:dateModified "2023-05-09" ;
@@ -230,8 +240,9 @@ ex:ontology {
     schema1:name "SDSC-ORD" .
 
 <https://github.com/SDSC-ORD/pxRRead> a schema1:SoftwareSourceCode ;
-    schema1:CodeRepository <file:///home/cmatthey/Repos/github.com/SDSC-ORD/kg-llm-interface/SDSC-ORD/pxRRead> ;
+    schema1:codeRepository <https://github.com/SDSC-ORD/pxRRead> ;
     schema1:author <https://github.com/SDSC-ORD> ;
+    schema1:name "SDSC-ORD/pxRRead" ;
     schema1:contributor <https://github.com/sabinem> ;
     schema1:dateCreated "2023-02-20" ;
     schema1:dateModified "2023-06-02" ;
@@ -251,4 +262,3 @@ ex:ontology {
     schema1:legalName "Swiss Data Science Center - ORD" ;
     schema1:logo <https://avatars.githubusercontent.com/u/114115753?v=4> ;
     schema1:name "SDSC-ORD" .
-
