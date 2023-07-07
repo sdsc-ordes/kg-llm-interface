@@ -146,7 +146,7 @@ def get_subjects_docs(
         except (RuntimeError, ParserError):
             for triple in triples:
                 g.add(triple)
-        meta = {"triples": g.serialize(format="ttl")}
+        meta = {"triples": g.serialize(format="nt")}
         docs.append(Document(text, extra_info=meta))
     return docs
 

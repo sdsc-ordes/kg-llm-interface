@@ -2,6 +2,7 @@ import re
 from typing import Any, List, Mapping, Optional
 
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
+from langchain.llms.base import LLM
 import torch
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
@@ -21,10 +22,10 @@ def setup_llm(model_id: str, max_new_tokens: int):
     return llm
 
 
-def setup_llm_chain(llm: HuggingFacePipeline, prompt_template: str) -> LLMChain:
+def setup_llm_chain(llm: LLM, prompt_template: str) -> LLMChain:
     """Prepare the prompt injection and text generation system."""
     # Auto-detecting prompt variables surrounded by single curly braces
-    variables = re.findall(r'[^{]{([^}]+)}[^}]', prompt_template)
+    variables = re.findall(r"[^{]{([^}]+)}[^}]", prompt_template)
     prompt = PromptTemplate(
         template=prompt_template,
         input_variables=variables,

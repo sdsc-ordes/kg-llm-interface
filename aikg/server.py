@@ -7,10 +7,8 @@ import logging
 import os
 import sys
 
-from chromadb.api import Collection
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from langchain import LLMChain
 from pathlib import Path
 from rdflib import Graph
 
@@ -19,7 +17,7 @@ import aikg.config.chroma
 import aikg.config.chat
 import aikg.config.sparql
 from aikg.models import Conversation, Message
-from aikg.utils.chat import post_process_answer
+from aikg.utils.chat import post_process_answer, generate_sparql
 from aikg.utils.llm import setup_llm_chain, setup_llm
 from aikg.utils.chroma import setup_chroma
 from aikg.utils.rdf import setup_kg, query_kg
@@ -31,24 +29,10 @@ chroma_config = aikg.config.chroma.ChromaConfig()
 sparql_config = aikg.config.sparql.SparqlConfig()
 if os.environ.get("CHAT_CONFIG"):
     chat_config = parse_yaml_config(
-        Path(os.environ['CHAT_CONFIG']),
-        aikg.config.chat.ChatConfig
+        Path(os.environ["CHAT_CONFIG"]), aikg.config.chat.ChatConfig
     )
 else:
     chat_config = aikg.config.chat.ChatConfig()
-
-def generate_sparql(
-    question: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
-) -> str:
-    """Retrieve k-nearest documents from the vector store and synthesize
-    SPARQL query."""
-
-    # Retrieve documents and triples from top k subjects
-    results = collection.query(query_texts=question, n_results=limit)
-    # Extract triples and concatenate as a ntriples string
-    triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
-    query = llm_chain.run(question_str=question, context_str=triples)
-    return query
 
 
 collection = setup_chroma(
