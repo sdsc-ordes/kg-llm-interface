@@ -1,7 +1,8 @@
 """Utilities to help processing chatbot prompts or answers."""
 from typing import Any, Iterable
-from chromadb.api import Collection
 
+from chromadb.api import Collection
+from rdflib import Graph
 from langchain import LLMChain
 
 
@@ -47,6 +48,8 @@ def generate_sparql(
     results = collection.query(query_texts=question, n_results=limit)
     # Extract triples and concatenate as a ntriples string
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
+    # Convert to turtle for better readability and fewer tokens
+    triples = Graph().parse(data=triples).serialize(format="turtle")
     query = llm_chain.run(question_str=question, context_str=triples)
     return query
 
