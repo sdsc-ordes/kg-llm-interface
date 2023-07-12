@@ -12,6 +12,21 @@ spec:
       labels:
         app: chroma
     spec:
+      initContainers:
+      - name: config
+        image: busybox
+        command: ['sh', '-c', 'cp /etc/configs/config.d/backup_disk.xml /etc/clickhouse-server/config.d && cp /etc/configs/users.d/chroma.xml /etc/clickhouse-server/users.d']
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/clickhouse-server/config.d
+        - name: users-volume
+          mountPath: /etc/clickhouse-server/users.d
+        - name: config
+          mountPath: /etc/configs/config.d/backup_disk.xml
+          subPath: backup_disk.xml
+        - name: users
+          mountPath: /etc/configs/users.d/chroma.xml
+          subPath: chroma.xml
       containers:
       - name: kg-llm-chroma
         image: ghcr.io/chroma-core/chroma:0.3.23
@@ -47,10 +62,12 @@ spec:
           mountPath: /var/lib/clickhouse
         - name: backups
           mountPath: /backups
-        - name: config
+        - name: config-volume
           mountPath: /etc/clickhouse-server/config.d/backup_disk.xml
-        - name: users
+          subPath: backup_disk.xml
+        - name: users-volume
           mountPath: /etc/clickhouse-server/users.d/chroma.xml
+          subPath: chroma.xml
       volumes:
       - name: index-data
         persistentVolumeClaim:
@@ -73,3 +90,7 @@ spec:
           items:
           - key: chroma.xml
             path: chroma.xml
+      - name: config-volume
+        emptyDir: {}
+      - name: users-volume
+        emptyDir: {}
