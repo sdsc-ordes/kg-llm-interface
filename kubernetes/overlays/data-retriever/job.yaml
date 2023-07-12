@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: data-retreiver
+  name: data-retriever
 spec:
   template:
     spec:
       containers:
-      - name: data-retreiver-container
+      - name: data-retriever-container
         image: daniilzhyrov/kg-llm:latest
         env:
         - name: CHROMA_HOST
