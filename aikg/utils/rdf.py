@@ -1,15 +1,16 @@
 from itertools import groupby
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 from llama_index.readers.base import BaseReader
 from llama_index.readers.schema.base import Document
 from rdflib import ConjunctiveGraph, Graph
-from rdflib.namespace import RDF, RDFS
+from rdflib.exceptions import ParserError
 from SPARQLWrapper import SPARQLWrapper, CSV
+from urllib.parse import urlparse
 
-
-RDF_DOC_QUERY = """
+# Retrieve triples of human readable labels/values from a SPARQL endpoint.
+TRIPLE_LABEL_QUERY = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?s ?p ?o ?sLab ?pLab ?oClean
@@ -31,51 +32,81 @@ WHERE
     FILTER(LANG(?pLab) = "{lang}")
     FILTER(LANG(?oLabOrVal) = "{lang}" || LANG(?oLabOrVal) = "")
     BIND (REPLACE(STR(?oLabOrVal), "^.*[#/:]([^/:#]*)$", "$1") as ?oClean)
+    {graph_mask}
+}}
+"""
+
+# Retrieve each subject and its annotations
+SUBJECT_DOC_QUERY = """
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?s ?sLab ?sCom
+WHERE
+{{
+    ?s rdfs:label ?sLab .
+    OPTIONAL {{
+        ?s rdfs:comment ?sCom .
+        ?o rdfs:label ?oLab .
+    }}
+    FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
+    FILTER(LANG(?sCom) = "{lang}" || LANG(?sLab) = "")
+    {graph_mask}
 }}
 """
 
 
-def split_graph_by_subject(graph: Graph) -> Iterator[Graph]:
-    """Generate RDF documents (triples) by splitting input graph.
-    Each document contains all triples with the same subject."""
-
-    subjects = set(graph.subjects())
-    for subject in subjects:
-        # Create a new graph for each subject
-        new_graph = Graph()
-        new_graph += graph.triples((subject, None, None))
-        # Yield the new graph
-        yield new_graph
+def make_graph_mask(graph: Optional[str] = None) -> str:
+    if graph:
+        return f"FILTER EXISTS {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}"
+    else:
+        return ""
 
 
-def split_conjunctive_graph_by_subject(graph: ConjunctiveGraph) -> Iterator[Graph]:
-    """Generate RDF documents (triples) by splitting input graph.
-    Each document contains all triples with the same subject."""
-    for ctx in graph.contexts():
-        for subject_graph in split_graph_by_subject(ctx):
-            yield subject_graph
+def setup_kg(
+    endpoint: str, user: Optional[str] = None, password: Optional[str] = None
+) -> Graph | SPARQLWrapper:
+    """Try to connect to SPARQL endpoint. If not a URL, attempt
+    to parse RDF file with rdflib."""
+
+    url = urlparse(endpoint)
+    if url.scheme and url.netloc:
+        kg = SPARQLWrapper(endpoint)
+        kg.setReturnFormat(CSV)
+        if user and password:
+            kg.setCredentials(user, password)
+    else:
+        kg = ConjunctiveGraph()
+        kg.parse(endpoint)
+    return kg
 
 
 def split_documents_from_endpoint(
-    endpoint: str, user: Optional[str] = None, password: Optional[str] = None
+    kg: Graph | SPARQLWrapper,
+    graph: Optional[str] = None,
 ) -> Iterator[Document]:
-    """Load subject-based documents from a SPARQL endpoint."""
+    """Load subject-based documents from a SPARQL endpoint.
 
-    # Setup sparql endpoint
-    sparql = SPARQLWrapper(endpoint)
-    sparql.setReturnFormat(CSV)
-    if user and password:
-        sparql.setCredentials(user, password)
-    sparql.setQuery(RDF_DOC_QUERY.format(lang="en"))
+    Parameters
+    ----------
+    endpoint:
+        URL of the SPARQL endpoint.
+    user:
+        Username to use for authentication.
+    password:
+        Password to use for authentication.
+    graph:
+        URI of named graph to load RDF data from.
+        If not specified, all subjects are used.
+    """
+
+    graph_mask = make_graph_mask(graph)
 
     # Load the query results
     # Query results contain 6 columns:
     # subject, predicate, object, subject label, predicate label, object label
-    results = sparql.queryAndConvert().decode("utf-8").split("\r\n")
-    # Parse csv fields
-    results = map(lambda x: x.split(",", maxsplit=5), results)
-    # Exclude empty / incomplete results
-    results = filter(lambda x: len(x) == 6, results)
+    results = query_kg(kg, TRIPLE_LABEL_QUERY.format(lang="en", graph_mask=graph_mask))
+    # Exclude empty / incomplete results (e.g. missing labels)
+    results = filter(lambda x: len(list(x)) == 6, results)
     next(results)  # skip header
     results = sorted(results, key=lambda x: x[0])[1:]
     # Yield triples and text by subject
@@ -88,54 +119,49 @@ def split_documents_from_endpoint(
         yield Document(doc, extra_info={"subject": k, "triples": triples})
 
 
-class CustomRDFReader(BaseReader):
-    """RDF reader."""
+def get_subjects_docs(
+    kg: Graph | SPARQLWrapper, graph: Optional[str] = None
+) -> List[Document]:
+    """Given an RDF graph, iterate over subjects, extract human-readable
+    RDFS annotations. For each subject, retrieve a "text document" with
+    original triples attached as metadata."""
 
-    def __init__(
-        self,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize loader."""
-        super().__init__(*args, **kwargs)
-
-        self.g_global = Graph()
-        self.g_global.parse(str(RDF))
-        self.g_global.parse(str(RDFS))
-
-    def load_data(
-        self, graph: Path | Graph, extra_info: Optional[Dict] = None
-    ) -> Document:
-        """Parse graph into a document of human-readable triples. All
-        URIs are converted to their rdfs:label when possible. Objects
-        URIs without labels are converted to their fragment. Literals
-        are kept as they are.
-
-        Parameters
-        ---------
-        graph:
-            Path to the graph file or the graph itself.
-        extra_info:
-            Extra information to be stored in the document.
-            The "lang" key is used to specify the language of the document.
+    results = query_kg(
+        kg, SUBJECT_DOC_QUERY.format(lang="en", graph_mask=make_graph_mask(graph))
+    )
+    docs = []
+    for sub, label, comment in results:
+        if comment is None:
+            comment = ""
+        text = f"""
+        {label}
+        {comment}
         """
-        if extra_info is None:
-            extra_info = {"lang": "en"}
-        lang = extra_info.get("lang", "en")
+        triples = query_kg(kg, f"DESCRIBE <{sub}>")
 
-        if isinstance(graph, Graph):
-            g_local = graph
-        else:
-            g_local = Graph()
-            g_local.parse(graph)
+        g = Graph()
+        # SPARQLWrapper returns a ntriple string, rdflib a list of triples
+        try:
+            g.parse(data=triples[0][0], format="nt")
+        except (RuntimeError, ParserError):
+            for triple in triples:
+                g.add(triple)
+        meta = {"triples": g.serialize(format="nt")}
+        docs.append(Document(text, extra_info=meta))
+    return docs
 
-        res = (g_local | self.g_global).query(RDF_DOC_QUERY.format(lang=lang))
 
-        # human-readable labels stored as document text
-        text = "\n".join([f"{s} {p} {o}" for (_, _, _, s, p, o) in res])
-        # original triples stored as extra info
-        extra_info["triples"] = "\n".join(
-            [f"<{s}> <{p}> <{o}>" for (s, p, o, _, _, _) in res]
-        )
+def query_kg(kg: Graph | SPARQLWrapper, query: str) -> List[List[Any]]:
+    """Query a knowledge graph, either an rdflib Graph or a SPARQLWrapper."""
+    if isinstance(kg, Graph):
+        results = [x for x in kg.query(query)]
+    elif isinstance(kg, SPARQLWrapper):
+        kg.setQuery(query)
+        kg.setReturnFormat("csv")
+        results = [
+            row.split(",") for row in kg.query().convert().decode("utf-8").split("\r\n")
+        ]
+    else:
+        raise ValueError(f"Invalid type for kg: {type(kg)}")
 
-        return Document(text, extra_info=extra_info)
+    return results
