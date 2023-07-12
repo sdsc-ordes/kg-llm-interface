@@ -1,15 +1,13 @@
 import re
-from typing import Any, List, Mapping, Optional
 
 from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
 from langchain.llms.base import LLM
-import torch
-from transformers import pipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-import aikg.config.chat
 
 
 def setup_llm(model_id: str, max_new_tokens: int):
+    from transformers import pipeline
+    from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
     tok = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(model_id)
     pipe = pipeline(

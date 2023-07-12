@@ -2,8 +2,7 @@ from itertools import groupby
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional
 
-from llama_index.readers.base import BaseReader
-from llama_index.readers.schema.base import Document
+from langchain.schema import Document
 from rdflib import ConjunctiveGraph, Graph
 from rdflib.exceptions import ParserError
 from SPARQLWrapper import SPARQLWrapper, CSV
@@ -116,7 +115,7 @@ def split_documents_from_endpoint(
         triples = "\n".join([f"<{s}> <{p}> <{o}>" for s, p, o, sl, pl, ol in data])
         # Human-readable "triples" about subject k
         doc = "\n".join([" ".join(elem[3:]) for elem in data])
-        yield Document(doc, extra_info={"subject": k, "triples": triples})
+        yield Document(page_content=doc, metadata={"subject": k, "triples": triples})
 
 
 def get_subjects_docs(
@@ -147,7 +146,7 @@ def get_subjects_docs(
             for triple in triples:
                 g.add(triple)
         meta = {"triples": g.serialize(format="nt")}
-        docs.append(Document(text, extra_info=meta))
+        docs.append(Document(page_content=text, metadata=meta))
     return docs
 
 

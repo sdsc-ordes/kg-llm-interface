@@ -1,11 +1,6 @@
 import chromadb
 from chromadb.config import Settings
 from chromadb.api import API, Collection
-from fastapi import FastAPI
-from llama_index.vector_stores import ChromaVectorStore
-from requests import HTTPError
-from typing import Optional
-import urllib.parse
 
 
 def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> API:

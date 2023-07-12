@@ -11,10 +11,11 @@ for querying."""
 from pathlib import Path
 from typing import Optional, Tuple
 from typing_extensions import Annotated
+import uuid
 
 from chromadb.api import API, Collection
 from dotenv import load_dotenv
-from llama_index import Document
+from langchain.schema import Document
 from more_itertools import chunked
 from prefect import flow, task
 from prefect import get_run_logger
@@ -54,9 +55,9 @@ def sparql_to_documents(
 def index_batch(batch: list[Document]):
     """Sends a batch of document for indexing in the vector store"""
     coll.add(
-        ids=[doc.doc_id for doc in batch],
-        documents=[doc.text for doc in batch],
-        metadatas=[doc.extra_info for doc in batch],
+        ids=[str(uuid.uuid4()) for _ in batch],
+        documents=[doc.page_content for doc in batch],
+        metadatas=[doc.metadata for doc in batch],
     )
 
 
