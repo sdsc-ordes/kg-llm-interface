@@ -18,6 +18,10 @@ Configuration variables are loaded from the `.env` file or environment variables
 You can read and run the [example notebook](aikg/notebooks/nl_sparql.ipynb) to get a quick overview of the system.
 The notebook supports using the Openai API and can run locally on a laptop.
 
+To run the notebook in a containerized environment, run:
+
+`make notebook`
+
 ## Server
 
 The server can be deployed as a standalone service using the script `scripts/standalone_server.sh`. It will start a uvicorn server on port 8001, use chromaDB in client-only mode and use an RDF file as knowledge graph. This should work for small datasets.
