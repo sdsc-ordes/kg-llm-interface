@@ -151,16 +151,27 @@ def get_subjects_docs(
 
 
 def query_kg(kg: Graph | SPARQLWrapper, query: str) -> List[List[Any]]:
-    """Query a knowledge graph, either an rdflib Graph or a SPARQLWrapper."""
+    """Query a knowledge graph, either an rdflib Graph or a SPARQLWrapper.
+    Results are returned as a list of lists representing a table."""
+    query2fmt = {"DESCRIBE": "nt", "SELECT": "csv", "CONSTRUCT": "nt"}
     if isinstance(kg, Graph):
-        results = [x for x in kg.query(query)]
+        resp = kg.query(query)
+        fmt = query2fmt[resp.type]
+        raw_results = resp.serialize(format=fmt)
+
     elif isinstance(kg, SPARQLWrapper):
         kg.setQuery(query)
-        kg.setReturnFormat("csv")
-        results = [
-            row.split(",") for row in kg.query().convert().decode("utf-8").split("\r\n")
-        ]
+        fmt = query2fmt[kg.queryType]
+        kg.setReturnFormat(fmt)
+        raw_results = kg.query().convert()
     else:
         raise ValueError(f"Invalid type for kg: {type(kg)}")
+    if fmt == "csv":
+        import csv
+
+        lines = raw_results.decode("utf-8").splitlines()
+        return [row for row in csv.reader(lines, quotechar='"', delimiter=",") if row]
+    else:
+        return [[raw_results]]
 
     return results
