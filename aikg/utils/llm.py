@@ -23,7 +23,7 @@ def setup_llm(model_id: str, max_new_tokens: int):
 def setup_llm_chain(llm: LLM, prompt_template: str) -> LLMChain:
     """Prepare the prompt injection and text generation system."""
     # Auto-detecting prompt variables surrounded by single curly braces
-    variables = re.findall(r"[^{]{([^}]+)}[^}]", prompt_template)
+    variables = re.findall(r"[^{]{([^} \n]+)}[^}]", prompt_template)
     prompt = PromptTemplate(
         template=prompt_template,
         input_variables=variables,
