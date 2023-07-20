@@ -12,7 +12,7 @@ RUN apt-get update && apt-get -y install \
     python3-dev \
     g++-11 \
     build-essential \
-    curl tzdata
+    curl wget tzdata
 
 # Install poetry
 ENV POETRY_HOME="/opt/poetry" \

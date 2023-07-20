@@ -129,6 +129,9 @@ def get_subjects_docs(
         kg, SUBJECT_DOC_QUERY.format(lang="en", graph_mask=make_graph_mask(graph))
     )
     docs = []
+    print("*\n\n\n\n\n\n\n\n\n\n\n\n\n\n*")
+    print(results)
+    print("*\n\n\n\n\n\n\n\n\n\n\n\n\n\n*")
     for sub, label, comment in results:
         if comment is None:
             comment = ""
