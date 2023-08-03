@@ -110,7 +110,6 @@ def chroma_build_flow(
         embed_counter += len(batch)
         index_batch(batch)
     logger.info(f"Indexed {embed_counter} items.")
-    client.persist()
 
 
 def cli(

@@ -12,34 +12,20 @@ spec:
       labels:
         app: chroma
     spec:
-      initContainers:
-      - name: config
-        image: busybox
-        command: ['sh', '-c', 'cp /etc/configs/config.d/backup_disk.xml /etc/clickhouse-server/config.d && cp /etc/configs/users.d/chroma.xml /etc/clickhouse-server/users.d']
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/clickhouse-server/config.d
-        - name: users-volume
-          mountPath: /etc/clickhouse-server/users.d
-        - name: config
-          mountPath: /etc/configs/config.d/backup_disk.xml
-          subPath: backup_disk.xml
-        - name: users
-          mountPath: /etc/configs/users.d/chroma.xml
-          subPath: chroma.xml
       containers:
       - name: kg-llm-chroma
-        image: ghcr.io/chroma-core/chroma:0.3.23
+        image: ghcr.io/chroma-core/chroma:0.4.3
+        resources:
+          requests:
+            memory: "16Gi"
+          limits:
+            memory: "16Gi"
         command:
         - uvicorn
         args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "log_config.yml"]
         env:
-        - name: CHROMA_DB_IMPL
-          value: "clickhouse"
-        - name: CLICKHOUSE_HOST
-          value: "localhost"
-        - name: CLICKHOUSE_PORT
-          value: clickhouse_http_port_placeholder
+        - name: IS_PERSISTENT
+          value: "true"
         - name: CHROMA_PORT
           value: chroma_port_placeholder
         ports:
@@ -48,49 +34,9 @@ spec:
         volumeMounts:
         - name: index-data
           mountPath: /index_data
-      - name: kg-llm-clickhouse
-        image: clickhouse/clickhouse-server:22.9-alpine
-        env:
-        - name: ALLOW_EMPTY_PASSWORD
-          value: "yes"
-        - name: CLICKHOUSE_TCP_PORT
-          value: $(CLICKHOUSE_TCP_PORT)
-        - name: CLICKHOUSE_HTTP_PORT
-          value: $(CLICKHOUSE_HTTP_PORT)
-        volumeMounts:
-        - name: clickhouse-data
-          mountPath: /var/lib/clickhouse
-        - name: backups
-          mountPath: /backups
-        - name: config-volume
-          mountPath: /etc/clickhouse-server/config.d/backup_disk.xml
-          subPath: backup_disk.xml
-        - name: users-volume
-          mountPath: /etc/clickhouse-server/users.d/chroma.xml
-          subPath: chroma.xml
       volumes:
       - name: index-data
         persistentVolumeClaim:
           claimName: index-data
-      - name: clickhouse-data
-        persistentVolumeClaim:
-          claimName: clickhouse-data
-      - name: backups
-        persistentVolumeClaim:
-          claimName: backups
-      - name: config
-        configMap:
-          name: backup-disk-config
-          items:
-          - key: backup_disk.xml
-            path: backup_disk.xml
-      - name: users
-        configMap:
-          name: chroma-users-config
-          items:
-          - key: chroma.xml
-            path: chroma.xml
-      - name: config-volume
-        emptyDir: {}
-      - name: users-volume
-        emptyDir: {}
+
+

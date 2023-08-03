@@ -5,25 +5,10 @@ from chromadb.api import API, Collection
 
 def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> API:
     """Prepare chromadb client. If host is 'local', chromadb will run in client-only mode."""
-    config = dict(
-        anonymized_telemetry=False,
-    )
     if host == "local":
-        config |= dict(
-            chroma_db_impl="duckdb+parquet",
-            persist_directory=persist_directory,
-        )
+        chroma_client = chromadb.PersistentClient(path=persist_directory)
     else:
-        config |= dict(
-            chroma_api_impl="rest",
-            chroma_server_host=host,
-            chroma_server_http_port=str(port),
-        )
-    chroma_client = chromadb.Client(
-        Settings(
-            **config,
-        )
-    )
+        chroma_client = chromadb.HttpClient(host=host, port=str(port))
     return chroma_client
 
 

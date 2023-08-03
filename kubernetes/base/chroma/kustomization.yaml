@@ -19,27 +19,6 @@ replacements:
 - source:
     kind: ConfigMap
     name: chroma-db-config
-    fieldpath: data.CLICKHOUSE_HTTP_PORT
-  targets:
-  - select:
-      kind: Deployment
-      name: chroma-server
-    fieldPaths:
-    - spec.template.spec.containers.[name=kg-llm-chroma].env.[name=CLICKHOUSE_PORT].value
-    - spec.template.spec.containers.[name=kg-llm-clickhouse].env.[name=CLICKHOUSE_HTTP_PORT].value
-- source:
-    kind: ConfigMap
-    name: chroma-db-config
-    fieldpath: data.CLICKHOUSE_TCP_PORT
-  targets:
-  - select:
-      kind: Deployment
-      name: chroma-server
-    fieldPaths:
-    - spec.template.spec.containers.[name=kg-llm-clickhouse].env.[name=CLICKHOUSE_TCP_PORT].value
-- source:
-    kind: ConfigMap
-    name: chroma-db-config
     fieldpath: data.CHROMA_PORT
   targets:
   - select:
