@@ -20,12 +20,12 @@ replacements:
   targets:
   - select:
       kind: Deployment
-      name: chatllm
+      name: chatllm-server
     fieldPaths:
     - spec.template.spec.containers.[name=chatllm-container].ports.[name=http].containerPort
   - select:
       kind: Service
-      name: chatllm
+      name: chatllm-service
     fieldPaths:
     - spec.ports.[name=http].targetPort
 - source:
@@ -35,6 +35,6 @@ replacements:
   targets:
   - select:
       kind: Service
-      name: chatllm
+      name: chatllm-service
     fieldPaths:
     - spec.ports.[name=http].port

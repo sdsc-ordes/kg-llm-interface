@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chroma-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chroma
+  template:
+    metadata:
+      labels:
+        app: chroma
+    spec:
+      containers:
+      - name: kg-llm-chroma
+        image: ghcr.io/chroma-core/chroma:0.4.3
+        resources:
+          requests:
+            memory: "16Gi"
+          limits:
+            memory: "16Gi"
+        command:
+        - uvicorn
+        args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "log_config.yml"]
+        env:
+        - name: IS_PERSISTENT
+          value: "true"
+        - name: CHROMA_PORT
+          value: chroma_port_placeholder
+        ports:
+        - containerPort: 0
+          name: chroma-port
+        volumeMounts:
+        - name: index-data
+          mountPath: /index_data
+      volumes:
+      - name: index-data
+        persistentVolumeClaim:
+          claimName: index-data
+
+

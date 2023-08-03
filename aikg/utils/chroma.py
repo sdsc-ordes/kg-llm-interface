@@ -1,21 +1,30 @@
 import chromadb
 from chromadb.config import Settings
-from fastapi import FastAPI
-from llama_index.vector_stores import ChromaVectorStore
-from requests import HTTPError
-import urllib.parse
+from chromadb.api import API, Collection
 
 
-def get_chroma_client(host: str, port: int):
-    """Prepare chromadb client."""
-
-    # Connect to vector db server
-    chroma_client = chromadb.Client(
-        Settings(
-            chroma_api_impl="rest",
-            chroma_server_host=host,
-            chroma_server_http_port=str(port),
-            anonymized_telemetry=False,
-        )
-    )
+def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> API:
+    """Prepare chromadb client. If host is 'local', chromadb will run in client-only mode."""
+    if host == "local":
+        chroma_client = chromadb.PersistentClient(path=persist_directory)
+    else:
+        chroma_client = chromadb.HttpClient(host=host, port=str(port))
     return chroma_client
+
+
+def setup_collection(
+    client: API,
+    collection_name: str,
+    embedding_model: str,
+) -> Collection:
+    """Setup the connection to ChromaDB collection."""
+
+    from chromadb.utils import embedding_functions
+
+    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=embedding_model
+    )
+    collection = client.get_or_create_collection(
+        collection_name, embedding_function=embedding_function
+    )
+    return collection

@@ -1,0 +1,42 @@
+
+model_id: lmsys/vicuna-7b-v1.3
+answer_template: |
+  The following describe a user question, associated SPARQL query and the result from the query.
+  Based on this information, write an answer in simple terms that describes the results.
+
+  Question:
+  {question_str}
+  Query:
+  {query_str}
+  Result:
+  {result_str}
+  Answer:
+sparql_template: |
+
+  Use the question and the additional information to generate a sparql query against
+  a knowledge graph where the p and q items are
+
+  completely unknown to you. You will need to discover the p and q items before you
+  can generate the sparql.
+
+  Do not assume you know the p and q items for any concepts.
+
+  After you generate the sparql, you should display it.
+
+  When generating sparql,  Never enclose the sparql in back-quotes
+
+  Use the following format:
+
+  Question: the input question for which you must provide a natural language answer
+
+  Information: the additional information you get with the query, in RDF format. This
+  will help you generate the sparql query with the correct format.
+
+
+  Question: {question_str}
+
+  Information:
+
+  {context_str}
+
+  Answer:

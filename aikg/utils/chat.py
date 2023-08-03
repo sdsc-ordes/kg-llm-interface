@@ -1,4 +1,9 @@
 """Utilities to help processing chatbot prompts or answers."""
+from typing import Any, Iterable
+
+from chromadb.api import Collection
+from rdflib import Graph
+from langchain import LLMChain
 
 
 def keep_first_line(text: str) -> str:
@@ -31,3 +36,37 @@ def post_process_answer(answer: str) -> str:
     text = keep_first_line(answer)
     text = drop_if_keyword(text)
     return text
+
+
+def generate_sparql(
+    question: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
+) -> str:
+    """Retrieve k-nearest documents from the vector store and synthesize
+    SPARQL query."""
+
+    # Retrieve documents and triples from top k subjects
+    results = collection.query(query_texts=question, n_results=limit)
+    # Extract triples and concatenate as a ntriples string
+    triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
+    # Convert to turtle for better readability and fewer tokens
+    triples = Graph().parse(data=triples).serialize(format="turtle")
+    query = llm_chain.run(question_str=question, context_str=triples)
+    return query
+
+
+def generate_answer(
+    question: str,
+    query: str,
+    results: Iterable[Any],
+    llm_chain: LLMChain,
+) -> str:
+    """
+    Given a question, associated SPARQL query and execution result,
+    use a LLM to generate a natural language answer describing the results.
+    """
+    # Extract triples and concatenate as a ntriples string
+    fmt_results = ["\n".join(map(str, results))]
+    answer = llm_chain.run(
+        query_str=query, question_str=question, result_str=fmt_results
+    )
+    return answer

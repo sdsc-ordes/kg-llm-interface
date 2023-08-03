@@ -1,0 +1,88 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- job.yaml
+- ../../base
+
+configMapGenerator:
+- name: data-retriever-config
+  envs:
+  - params.env
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.CHROMA_SERVICE_NAME
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=CHROMA_HOST].value
+    options:
+      delimiter: "."
+      index: 0
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.CHROMA_SERVICE_NAMESPACE
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=CHROMA_HOST].value
+    options:
+      delimiter: "."
+      index: 1
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.CHROMA_PORT
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=CHROMA_PORT].value
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.GRAPHDB_SERVICE_NAME
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=SPARQL_HOST].value
+    options:
+      delimiter: "."
+      index: 0
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.GRAPHDB_SERVICE_NAMESPACE
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=SPARQL_HOST].value
+    options:
+      delimiter: "."
+      index: 1
+- source:
+    kind: ConfigMap
+    name: data-retriever-config
+    fieldPath: data.GRAPHDB_PORT
+  targets:
+  - select:
+      kind: Job
+      name: data-retriever
+    fieldPaths:
+    - spec.template.spec.containers.[name=data-retriever-container].env.[name=SPARQL_PORT].value

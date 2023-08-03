@@ -9,13 +9,24 @@ from SPARQLWrapper import SPARQLWrapper
 import typer
 
 from aikg.config.common import parse_yaml_config
-from aikg.config.sparql import SparqlConfig
+from aikg.config import SparqlConfig
 
 
 @task
 def setup_sparql_endpoint(
     endpoint: str, user: Optional[str] = None, password: Optional[str] = None
 ) -> SPARQLWrapper:
+    """Connect to SPARQL endpoint and setup credentials.
+
+    Parameters
+    ----------
+    endpoint:
+        URL of the SPARQL endpoint.
+    user:
+        Username to use for authentication.
+    password:
+        Password to use for authentication.
+    """
     # Setup sparql endpoint
     sparql = SPARQLWrapper(endpoint, updateEndpoint=endpoint + "/statements")
     if user and password:
@@ -24,8 +35,21 @@ def setup_sparql_endpoint(
 
 
 @task
-def insert_triples(rdf_file: Path, endpoint: SPARQLWrapper):
-    """Sends a batch of document for indexing in the vector store"""
+def insert_triples(
+    rdf_file: Path, endpoint: SPARQLWrapper, graph: Optional[str] = None
+):
+    """Insert triples from source file into SPARQL endpoint.
+
+    Parameters
+    ----------
+    rdf_file:
+        Path to RDF file to load into the SPARQL endpoint.
+    endpoint:
+        SPARQL endpoint to load RDF data into.
+    graph:
+        URI of named graph to load RDF data into.
+        If set to None, the default graph is used.
+    """
     from rdflib import Dataset
 
     data = Dataset()
@@ -35,32 +59,47 @@ def insert_triples(rdf_file: Path, endpoint: SPARQLWrapper):
         [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()]
     )
     query += f"\nINSERT DATA {{"
+    if graph:
+        query += f"\n\tGRAPH <{graph}> {{"
     query += " .\n".join(
         [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in data.quads()]
     )
+    if graph:
+        query += f"\n\t}}"
     query += f" . \n\n}}\n"
     endpoint.setQuery(query)
     endpoint.queryType = "INSERT"
     endpoint.method = "POST"
     endpoint.setReturnFormat("json")
-    results = endpoint.query()
+    endpoint.query()
 
 
 @flow
 def sparql_insert_flow(
     rdf_file: Path,
     sparql_cfg: SparqlConfig = SparqlConfig(),
+    graph: Optional[str] = None,
 ):
-    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint."""
+    """Workflow to connect to a SPARQL endpoint and send insert
+    queries to load triples from a local file.
+
+    Parameters
+    ----------
+    rdf_file:
+        Path to source RDF file.
+    sparql_cfg:
+        Configuration for the target SPARQL endpoint.
+    """
     load_dotenv()
     logger = get_run_logger()
     sparql = setup_sparql_endpoint(
         sparql_cfg.endpoint, sparql_cfg.user, sparql_cfg.password
     )
     logger.info("INFO SPARQL endpoint connected")
-    insert_triples(rdf_file, sparql)
+    insert_triples(rdf_file, sparql, graph)
 
 
+@flow
 def cli(
     rdf_file: Annotated[
         Path,
@@ -75,6 +114,13 @@ def cli(
             default=None, help="YAML file with SPARQL endpoint configuration."
         ),
     ] = None,
+    graph: Annotated[
+        Optional[str],
+        typer.Option(
+            default=None,
+            help="URI of named graph to load RDF data into. If not set, the default graph is used.",
+        ),
+    ] = None,
 ):
     """Command line wrapper to insert triples to a SPARQL endpoint."""
     sparql_cfg = (
@@ -82,7 +128,7 @@ def cli(
         if sparql_cfg_path
         else SparqlConfig()
     )
-    sparql_insert_flow(rdf_file, sparql_cfg)
+    sparql_insert_flow(rdf_file, sparql_cfg, graph)
 
 
 if __name__ == "__main__":
