@@ -16,7 +16,7 @@ class ChatConfig(BaseModel):
         prompt_template: The template for the prompt to inject into the model. The template should contain the following variables: context_str, query_str.
     """
 
-    model_id: str = "chainyo/alpaca-lora-7b"
+    model_id: str = "huggyllama/llama-7b"
     max_new_tokens: int = 48
     max_input_size: int = 2048
     num_output: int = 256
