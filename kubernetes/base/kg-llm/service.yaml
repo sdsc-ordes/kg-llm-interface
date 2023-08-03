@@ -4,6 +4,7 @@ metadata:
   name: kg-llm-service
   namespace: default
 spec:
+  type: NodePort
   selector:
     app: kg-llm
   ports:
