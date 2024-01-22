@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backup-disk-config
-  namespace: default
+  namespace: kg-llm
 data:
   backup_disk.xml: |
     <clickhouse>
@@ -24,7 +24,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chroma-users-config
-  namespace: default
+  namespace: kg-llm
 data:
   chroma.xml: |
     <clickhouse>

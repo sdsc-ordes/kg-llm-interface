@@ -20,3 +20,5 @@ spec:
         command: ["/bin/bash",  "/app/kubernetes/overlays/data-retriever/entrypoint.sh"]
       restartPolicy: Never
   parallelism: 1
+  # This will prevent the job from restarting, we may want to remove it
+  completions: 1
