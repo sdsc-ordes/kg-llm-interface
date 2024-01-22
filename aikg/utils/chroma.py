@@ -17,10 +17,10 @@
 
 import chromadb
 from chromadb.config import Settings
-from chromadb.api import API, Collection
+from chromadb.api import ClientAPI, Collection
 
 
-def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> API:
+def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> ClientAPI:
     """Prepare chromadb client. If host is 'local', chromadb will run in client-only mode."""
     if host == "local":
         chroma_client = chromadb.PersistentClient(path=persist_directory)
@@ -30,7 +30,7 @@ def setup_client(host: str, port: int, persist_directory: str = ".chroma") -> AP
 
 
 def setup_collection(
-    client: API,
+    client: ClientAPI,
     collection_name: str,
     embedding_model: str,
 ) -> Collection:
