@@ -31,6 +31,7 @@ langchain = "^0.0.230"
 openai = "^0.27.8"
 poethepoet = "^0.21.0"
 html5lib = "^1.1"
+anyio = "3.7.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
