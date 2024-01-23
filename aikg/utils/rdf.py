@@ -59,8 +59,8 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX schema: <http://schema.org/>
 SELECT DISTINCT ?s (SAMPLE(?sLab) as ?sLabel) ?sCom
-WHERE{
-    {
+WHERE
+{{
         VALUES ?labelProp {{skos:prefLabel rdfs:label sh:name schema:name}}
             VALUES ?defProp {{rdfs:comment skos:definition sh:description schema:description }}
             {{
