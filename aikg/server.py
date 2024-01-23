@@ -32,7 +32,7 @@ from rdflib import Graph
 from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
 from aikg.models import Conversation, Message
-from aikg.utils.chat import generate_answer, generate_sparql
+from aikg.utils.chat import generate_answer, generate_examples, generate_sparql
 from aikg.utils.llm import setup_llm_chain, setup_llm
 from aikg.utils.chroma import setup_collection, setup_client
 from aikg.utils.rdf import setup_kg, query_kg
@@ -56,6 +56,11 @@ client = setup_client(
 collection = setup_collection(
     client,
     chroma_config.collection_name,
+    chroma_config.embedding_model,
+)
+collection_examples = setup_collection(
+    client,
+    chroma_config.collection_examples,
     chroma_config.embedding_model,
 )
 llm = setup_llm(chat_config.model_id, chat_config.max_new_tokens)
@@ -89,6 +94,17 @@ async def ask(question: str) -> Message:
     results = query_kg(kg, query)
     answer = generate_answer(question, query, results, answer_chain)
     return Message(text=answer, sender="AI", time=datetime.now())
+
+
+@app.get("/examples/")
+async def ask(question: str) -> Message:
+    """Generate examples from question
+    and return examples to prompt."""
+    ...
+    examples = generate_examples(question, collection_examples, sparql_chain)
+    # results = query_kg(kg, query)
+    # answer = generate_answer(question, query, results, answer_chain)
+    return Message(text=examples, sender="AI", time=datetime.now())
 
 
 @app.get("/sparql/")

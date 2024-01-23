@@ -71,6 +71,23 @@ def generate_sparql(
     return query
 
 
+def generate_examples(
+    question: str,
+    collection: Collection,
+    limit: int = 5,
+) -> str:
+    """Retrieve k-nearest examples from the vector store and return them."""
+
+    # Retrieve documents and triples from top k subjects
+    examples = collection.query(query_texts=question, n_results=limit)
+    # Extract triples and concatenate as a ntriples string
+    # triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
+    # Convert to turtle for better readability and fewer tokens
+    # triples = Graph().parse(data=triples).serialize(format="turtle")
+    # query = llm_chain.run(question_str=question, context_str=triples)
+    return examples
+
+
 def generate_answer(
     question: str,
     query: str,
