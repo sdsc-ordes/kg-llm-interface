@@ -30,7 +30,7 @@ from typing import Optional, Tuple
 from typing_extensions import Annotated
 import uuid
 
-from chromadb.api import API, Collection
+from chromadb.api import ClientAPI, Collection
 from dotenv import load_dotenv
 from langchain.schema import Document
 from more_itertools import chunked
@@ -53,7 +53,7 @@ def init_chromadb(
     collection_name: str,
     embedding_model: str,
     persist_directory: str,
-) -> Tuple[API, Collection]:
+) -> Tuple[ClientAPI, Collection]:
     """Prepare chromadb client."""
     client = akchroma.setup_client(host, port, persist_directory=persist_directory)
     coll = akchroma.setup_collection(client, collection_name, embedding_model)
