@@ -61,19 +61,17 @@ PREFIX schema: <http://schema.org/>
 SELECT DISTINCT ?s (SAMPLE(?sLab) as ?sLabel) ?sCom
 WHERE
 {{
-        VALUES ?labelProp {{skos:prefLabel rdfs:label sh:name schema:name}}
-            VALUES ?defProp {{rdfs:comment skos:definition sh:description schema:description }}
-            {{
-            ?s ?labelProp ?sLab .
-            OPTIONAL {{
+    VALUES ?labelProp {{skos:prefLabel rdfs:label sh:name schema:name}}
+    VALUES ?defProp {{rdfs:comment skos:definition sh:description schema:description }}
+        ?s ?labelProp ?sLab .
+        OPTIONAL {{
             ?s ?defProp ?sCom .
         }}
-            FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
-            FILTER(LANG(?sCom) = "{lang}" || LANG(?sCom) = "")
-            {graph_mask}
-        }}
-        }}
-            Group by ?s ?sCom
+        FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
+        FILTER(LANG(?sCom) = "{lang}" || LANG(?sCom) = "")
+        {graph_mask}
+}}
+GROUP BY ?s ?sCom
 """
 
 
