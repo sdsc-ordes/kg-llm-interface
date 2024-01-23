@@ -55,19 +55,23 @@ WHERE
 # Retrieve each subject and its annotations
 SUBJECT_DOC_QUERY = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT DISTINCT ?s ?sLab ?sCom
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX schema: <http://schema.org/>
+SELECT DISTINCT ?s (SAMPLE(?sLab) as ?sLabel) ?sCom
 WHERE
 {{
-    ?s rdfs:label ?sLab .
-    OPTIONAL {{
-        ?s rdfs:comment ?sCom .
-        ?o rdfs:label ?oLab .
-    }}
-    FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
-    FILTER(LANG(?sCom) = "{lang}" || LANG(?sLab) = "")
-    {graph_mask}
+    VALUES ?labelProp {{skos:prefLabel rdfs:label sh:name schema:name}}
+    VALUES ?defProp {{rdfs:comment skos:definition sh:description schema:description }}
+        ?s ?labelProp ?sLab .
+        OPTIONAL {{
+            ?s ?defProp ?sCom .
+        }}
+        FILTER(LANG(?sLab) = "{lang}" || LANG(?sLab) = "")
+        FILTER(LANG(?sCom) = "{lang}" || LANG(?sCom) = "")
+        {graph_mask}
 }}
+GROUP BY ?s ?sCom
 """
 
 
