@@ -16,7 +16,10 @@
 # limitations under the License.
 
 import requests
+import os
 from pathlib import Path
+from typing import List
+from langchain.schema import Document
 
 from tqdm import tqdm
 
@@ -31,3 +34,28 @@ def download_file(url: str, output_path: str | Path):
         for chunk in tqdm(response.iter_content(chunk_size=8192)):
             if chunk:
                 f.write(chunk)
+
+
+def get_sparql_examples(input_path: str | Path) -> List[Document]:
+    """
+    Load SPARQL example query files with first line being the question (starting with #)
+    and the remaining lines being the query. We reformat this content into a document
+    where the page content is the question and the query is attached as metadata
+    """
+    # loop through example files from the input and create a doc with all examples
+    examples_docs = []
+    for file_name in os.listdir(input_path):
+        file_path = os.path.join(input_path, file_name)
+        with open(file_path) as f:
+            examples_temp = []
+            examples_temp.append(f.read())
+        # Splitting the file content into lines
+        lines = examples_temp[0].split("\n")
+        # Extracting the question (removing '#' from the first line)
+        question = lines[0].strip()[1:]
+        # Extracting the SPARQL query from the remaining lines
+        sparql_query = "\n".join(lines[1:])
+        examples_docs.append(
+            Document(page_content=question, metadata={"query": sparql_query})
+        )
+    return examples_docs

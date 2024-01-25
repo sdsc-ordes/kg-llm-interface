@@ -56,7 +56,11 @@ def post_process_answer(answer: str) -> str:
 
 
 def generate_sparql(
-    question: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
+    question: str,
+    examples: str,
+    collection: Collection,
+    llm_chain: LLMChain,
+    limit: int = 5,
 ) -> str:
     """Retrieve k-nearest documents from the vector store and synthesize
     SPARQL query."""
@@ -67,7 +71,12 @@ def generate_sparql(
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
     # Convert to turtle for better readability and fewer tokens
     triples = Graph().parse(data=triples).serialize(format="turtle")
-    query = llm_chain.run(question_str=question, context_str=triples)
+    print(question)
+    print(triples)
+    print(examples)
+    query = llm_chain.run(
+        question_str=question, context_str=triples, examples_str=examples
+    )
     return query
 
 
@@ -76,16 +85,24 @@ def generate_examples(
     collection: Collection,
     limit: int = 5,
 ) -> str:
-    """Retrieve k-nearest examples from the vector store and return them."""
+    """Retrieve k-nearest questions from the examples in the vector store and return them
+    together with their correponding query."""
 
     # Retrieve documents and triples from top k subjects
     examples = collection.query(query_texts=question, n_results=limit)
-    # Extract triples and concatenate as a ntriples string
-    # triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
-    # Convert to turtle for better readability and fewer tokens
-    # triples = Graph().parse(data=triples).serialize(format="turtle")
-    # query = llm_chain.run(question_str=question, context_str=triples)
-    return examples
+    # Extract relevant information from dict
+    example_docs = examples["documents"][0]
+    example_meta = examples["metadatas"][0]
+    #
+    example_prompt = ""
+    for doc, meta in zip(example_docs, example_meta):
+        example_prompt += f"""
+        Question:
+        {doc}
+        Query:
+        {meta['query']}
+        """
+    return example_prompt
 
 
 def generate_answer(

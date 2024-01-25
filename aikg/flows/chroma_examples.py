@@ -15,14 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This flow builds a ChromaDB vector index from RDF data in a SPARQL endpoint.
+"""This flow builds a ChromaDB vector index from examples including questions and corresponding SPARQL queries.
 
 For each subject in the target graph, a document is generated. The document consists of:
-* A human readable body made up of the annotations (rdfs:comment, rdf:label) associated with the subject.
-* Triples with the subject attached as metadata.
+* A human readable body made up of human readable questions
+* SPARQL queries attached as metadata.
 
-The documents are then stored in a vector database. The embedding is computed using the document body,
-and triples included as metadata. The index is persisted to disk and can be subsequently loaded into memory
+The documents are then stored in a vector database. The embedding is computed using the document body (questions),
+and SPAQRL queries included as metadata. The index is persisted to disk and can be subsequently loaded into memory
 for querying."""
 
 from pathlib import Path
@@ -36,13 +36,11 @@ from langchain.schema import Document
 from more_itertools import chunked
 from prefect import flow, task
 from prefect import get_run_logger
-from rdflib import ConjunctiveGraph, Graph
-from SPARQLWrapper import SPARQLWrapper
 import typer
 
-from aikg.config import ChromaConfig, SparqlConfig
+from aikg.config import ChromaConfig
 from aikg.config.common import parse_yaml_config
-import aikg.utils.rdf as akrdf
+import aikg.utils.io as akio
 import aikg.utils.chroma as akchroma
 
 
@@ -72,12 +70,11 @@ def index_batch(batch: list[Document]):
 
 
 @flow
-def chroma_build_flow(
+def chroma_build_examples_flow(
+    chroma_input_dir: Path,
     chroma_cfg: ChromaConfig = ChromaConfig(),
-    # sparql_cfg: SparqlConfig = SparqlConfig(),
-    # graph: Optional[str] = None,
 ):
-    """Build a ChromaDB vector index from RDF data in a SPARQL endpoint.
+    """Build a ChromaDB vector index from examples.
 
     Parameters
     ----------
@@ -92,20 +89,14 @@ def chroma_build_flow(
     client, coll = init_chromadb(
         chroma_cfg.host,
         chroma_cfg.port,
-        chroma_cfg.collection_name,
+        chroma_cfg.collection_examples,
         chroma_cfg.embedding_model,
         chroma_cfg.persist_directory,
     )
-    kg = akrdf.setup_kg(
-        sparql_cfg.endpoint,
-        user=sparql_cfg.user,
-        password=sparql_cfg.password,
-    )
 
     # Create subject documents
-    docs = sparql_to_documents(
-        kg,
-        graph=graph,
+    docs = akio.get_sparql_examples(
+        input_path=chroma_input_dir,
     )
 
     # Vectorize and index documents by batches to reduce overhead
@@ -118,36 +109,25 @@ def chroma_build_flow(
 
 
 def cli(
+    chroma_input_dir: Annotated[
+        Path,
+        typer.Argument(
+            default=None,
+            help="Path to directory with example SPARQL queries",
+        ),
+    ],
     chroma_cfg_path: Annotated[
         Optional[Path],
         typer.Option(default=None, help="YAML file with Chroma client configuration."),
     ] = None,
-    sparql_cfg_path: Annotated[
-        Optional[Path],
-        typer.Option(
-            default=None, help="YAML file with SPARQL endpoint configuration."
-        ),
-    ] = None,
-    graph: Annotated[
-        Optional[str],
-        typer.Option(
-            default=None,
-            help="URI of named graph from which to select triples to embed. If not set, the default graph is used.",
-        ),
-    ] = None,
 ):
-    """Command line wrapper for RDF to ChromaDB index flow."""
+    """Command line wrapper for SPARQL examples to ChromaDB index flow."""
     chroma_cfg = (
         parse_yaml_config(chroma_cfg_path, ChromaConfig)
         if chroma_cfg_path
         else ChromaConfig()
     )
-    sparql_cfg = (
-        parse_yaml_config(sparql_cfg_path, SparqlConfig)
-        if sparql_cfg_path
-        else SparqlConfig()
-    )
-    chroma_build_flow(chroma_cfg, sparql_cfg, graph=graph)
+    chroma_build_examples_flow(chroma_input_dir, chroma_cfg)
 
 
 if __name__ == "__main__":
