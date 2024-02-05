@@ -78,6 +78,8 @@ def chroma_build_examples_flow(
 
     Parameters
     ----------
+    chroma_input_dir:
+        Directory containing files with example question-query pairs. The files should be in sparql format, with the first line being the question as a comment.
     chroma_cfg:
         ChromaDB configuration.
     """
