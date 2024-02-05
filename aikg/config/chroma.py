@@ -44,7 +44,7 @@ class ChromaConfig(BaseModel):
     host: str = os.environ.get("CHROMA_HOST", "127.0.0.1")
     port: int = int(os.environ.get("CHROMA_PORT", "8000"))
     collection_name: str = os.environ.get("CHROMA_COLLECTION", "schema")
-    collection_examples: str = os.environ.get("CHROMA_COLLECTION", "examples")
+    collection_examples: str = os.environ.get("CHROMA_EXAMPLES", "examples")
     batch_size: int = int(os.environ.get("CHROMA_BATCH_SIZE", "50"))
     embedding_model: str = os.environ.get("CHROMA_MODEL", "all-mpnet-base-v2")
     persist_directory: str = os.environ.get("CHROMA_PERSIST_DIR", ".chroma/")
