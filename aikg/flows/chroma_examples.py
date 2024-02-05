@@ -114,8 +114,10 @@ def cli(
     chroma_input_dir: Annotated[
         Path,
         typer.Argument(
-            default=None,
             help="Path to directory with example SPARQL queries",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
         ),
     ],
     chroma_cfg_path: Annotated[
