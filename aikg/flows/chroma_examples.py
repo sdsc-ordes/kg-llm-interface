@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This flow builds a ChromaDB vector index from examples including questions and corresponding SPARQL queries.
+"""This flow builds a ChromaDB vector index from examples consisting of pairs of questions and SPARQL queries.
 
 For each subject in the target graph, a document is generated. The document consists of:
 * A human readable body made up of human readable questions
