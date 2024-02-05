@@ -71,9 +71,6 @@ def generate_sparql(
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
     # Convert to turtle for better readability and fewer tokens
     triples = Graph().parse(data=triples).serialize(format="turtle")
-    print(question)
-    print(triples)
-    print(examples)
     query = llm_chain.run(
         question_str=question, context_str=triples, examples_str=examples
     )
