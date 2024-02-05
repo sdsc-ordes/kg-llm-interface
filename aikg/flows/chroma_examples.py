@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from typing_extensions import Annotated
 import uuid
+import os
 
 from chromadb.api import ClientAPI, Collection
 from dotenv import load_dotenv
@@ -69,6 +70,16 @@ def index_batch(batch: list[Document]):
     )
 
 
+@task
+def get_sparql_examples(dir: Path) -> list[Document]:
+    # find files
+    files = []
+    for file_name in os.listdir(dir):
+        files.append(os.path.join(dir, file_name))
+    # provide each file as text stream to be parsed
+    return [akio.parse_sparql_example(open(ex)) for ex in files]
+
+
 @flow
 def chroma_build_examples_flow(
     chroma_input_dir: Path,
@@ -97,16 +108,17 @@ def chroma_build_examples_flow(
     )
 
     # Create subject documents
-    docs = akio.get_sparql_examples(
-        input_path=chroma_input_dir,
+    docs = get_sparql_examples(
+        dir=chroma_input_dir,
     )
 
     # Vectorize and index documents by batches to reduce overhead
     logger.info(f"Indexing by batches of {chroma_cfg.batch_size} items")
     embed_counter = 0
-    for batch in chunked(docs, chroma_cfg.batch_size):
-        embed_counter += len(batch)
-        index_batch(batch)
+    for doc in docs:
+        for batch in chunked(doc, chroma_cfg.batch_size):
+            embed_counter += len(batch)
+            index_batch(batch)
     logger.info(f"Indexed {embed_counter} items.")
 
 

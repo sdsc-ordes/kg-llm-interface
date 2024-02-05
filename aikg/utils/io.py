@@ -18,9 +18,8 @@
 import requests
 import os
 from pathlib import Path
-from typing import List
+from typing import List, TextIO
 from langchain.schema import Document
-
 from tqdm import tqdm
 
 
@@ -36,26 +35,24 @@ def download_file(url: str, output_path: str | Path):
                 f.write(chunk)
 
 
-def get_sparql_examples(input_path: str | Path) -> List[Document]:
+def parse_sparql_example(example: TextIO) -> List[Document]:
     """
-    Load SPARQL example query files with first line being the question (starting with #)
-    and the remaining lines being the query. We reformat this content into a document
+    Parse a text stream as input with first line being a question (starting with #)
+    and the remaining lines being a (SPARQL) query. We reformat this content into a document
     where the page content is the question and the query is attached as metadata
     """
-    # loop through example files from the input and create a doc with all examples
-    examples_docs = []
-    for file_name in os.listdir(input_path):
-        file_path = os.path.join(input_path, file_name)
-        with open(file_path) as f:
-            examples_temp = []
-            examples_temp.append(f.read())
-        # Splitting the file content into lines
-        lines = examples_temp[0].split("\n")
-        # Extracting the question (removing '#' from the first line)
-        question = lines[0].strip()[1:]
-        # Extracting the SPARQL query from the remaining lines
-        sparql_query = "\n".join(lines[1:])
-        examples_docs.append(
-            Document(page_content=question, metadata={"query": sparql_query})
-        )
-    return examples_docs
+    # Create temp variable to process text stream
+    example_temp = []
+    example_temp.append(example.read())
+    # Splitting the file content into lines
+    lines = example_temp[0].split("\n")
+    # Extracting the question (removing '#' from the first line)
+    question = lines[0].strip()[1:]
+    # Extracting the SPARQL query from the remaining lines
+    sparql_query = "\n".join(lines[1:])
+    # Create example document for the output
+    example_doc = []
+    example_doc.append(
+        Document(page_content=question, metadata={"query": sparql_query})
+    )
+    return example_doc
