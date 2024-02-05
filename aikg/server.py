@@ -102,8 +102,6 @@ async def ask(question: str) -> Message:
     and return examples to prompt."""
     ...
     examples = generate_examples(question, collection_examples, sparql_chain)
-    # results = query_kg(kg, query)
-    # answer = generate_answer(question, query, results, answer_chain)
     return Message(text=examples, sender="AI", time=datetime.now())
 
 
