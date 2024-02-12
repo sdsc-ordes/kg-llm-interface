@@ -21,6 +21,25 @@ spec:
         volumeMounts:
         - name: graphdb-home
           mountPath: /opt/graphdb/home
+      initContainers:
+      - name: data-retriever-container
+        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest 
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e;
+            cd /app;
+            curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F "config=@kubernetes/base/graphdb/repository_config.ttl";
+            export SPARQL_ENDPOINT=http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/repositories/test;
+            mkdir temp;
+            cd temp;
+            wget -O ontology.nt ${ONTOLOGY};
+            wget -O data.nq.gz ${DATA};
+            gzip -d data.nq.gz;
+            head -n 1000 data.nq > data.nq;
+            cd ..;
+            poetry run python3 aikg/flows/insert_triples.py /app/temp/ontology.nt;
+            poetry run python3 aikg/flows/insert_triples.py /app/temp/data.nq;
       volumes:
       - name: graphdb-home
         persistentVolumeClaim:

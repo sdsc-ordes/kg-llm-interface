@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: kg-llm-container
-        image: daniilzhyrov/kg-llm:latest
+        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest 
         env:
         - name: CHROMA_HOST
           value: "servicename.servicenamespace.svc.cluster.local"
