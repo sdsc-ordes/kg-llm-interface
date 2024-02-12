@@ -12,6 +12,7 @@ spec:
       labels:
         app: chroma
     spec:
+      restartPolicy: Always
       containers:
       - name: kg-llm-chroma
         image: ghcr.io/chroma-core/chroma:0.4.3
@@ -38,5 +39,6 @@ spec:
       - name: index-data
         persistentVolumeClaim:
           claimName: index-data
+
 
 

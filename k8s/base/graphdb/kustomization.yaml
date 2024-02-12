@@ -5,6 +5,7 @@ resources:
 - deployment.yaml
 - service.yaml
 - pvc.yaml
+- configmap.yaml
 
 configMapGenerator:
 - name: graphdb-config
