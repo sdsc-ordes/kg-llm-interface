@@ -116,25 +116,23 @@ def sparql_insert_flow(
     insert_triples(rdf_file, sparql, graph)
 
 
-@flow
 def cli(
     rdf_file: Annotated[
         Path,
         typer.Argument(
-            default=None,
             help="RDF file to load into the SPARQL endpoint, in turtle or n-triples format.",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
         ),
     ],
     sparql_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(
-            default=None, help="YAML file with SPARQL endpoint configuration."
-        ),
+        typer.Option(help="YAML file with SPARQL endpoint configuration."),
     ] = None,
     graph: Annotated[
         Optional[str],
         typer.Option(
-            default=None,
             help="URI of named graph to load RDF data into. If not set, the default graph is used.",
         ),
     ] = None,
