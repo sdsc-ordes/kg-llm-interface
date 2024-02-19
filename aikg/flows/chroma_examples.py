@@ -115,9 +115,10 @@ def chroma_build_examples_flow(
     # Vectorize and index documents by batches to reduce overhead
     logger.info(f"Indexing by batches of {chroma_cfg.batch_size} items")
     embed_counter = 0
-    for batch in chunked(docs, 2):
+    for batch in chunked(docs, chroma_cfg.batch_size):
         embed_counter += len(batch)
-        index_batch(batch)
+        for doc in batch:
+            index_batch(doc)
     logger.info(f"Indexed {embed_counter} items.")
 
 
