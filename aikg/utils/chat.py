@@ -57,9 +57,9 @@ def post_process_answer(answer: str) -> str:
 
 def generate_sparql(
     question: str,
-    examples: str,
     collection: Collection,
     llm_chain: LLMChain,
+    examples: str = "",
     limit: int = 5,
 ) -> str:
     """Retrieve k-nearest documents from the vector store and synthesize
@@ -91,7 +91,7 @@ def generate_examples(
     example_docs = examples["documents"][0]
     example_meta = examples["metadatas"][0]
     #
-    example_prompt = ""
+    example_prompt = "Examples: \n\n"
     for doc, meta in zip(example_docs, example_meta):
         example_prompt += f"""
         Question:

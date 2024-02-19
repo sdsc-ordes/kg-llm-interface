@@ -18,8 +18,8 @@
 """This flow builds a ChromaDB vector index from examples consisting of pairs of questions and SPARQL queries.
 
 For each subject in the target graph, a document is generated. The document consists of:
-* A human readable body made up of human readable questions
-* SPARQL queries attached as metadata.
+* A human readable question (document body)
+* A corresponding SPARQL query (document metadata)
 
 The documents are then stored in a vector database. The embedding is computed using the document body (questions),
 and SPAQRL queries included as metadata. The index is persisted to disk and can be subsequently loaded into memory
@@ -115,10 +115,9 @@ def chroma_build_examples_flow(
     # Vectorize and index documents by batches to reduce overhead
     logger.info(f"Indexing by batches of {chroma_cfg.batch_size} items")
     embed_counter = 0
-    for doc in docs:
-        for batch in chunked(doc, chroma_cfg.batch_size):
-            embed_counter += len(batch)
-            index_batch(batch)
+    for batch in chunked(docs, 2):
+        embed_counter += len(batch)
+        index_batch(batch)
     logger.info(f"Indexed {embed_counter} items.")
 
 

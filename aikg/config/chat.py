@@ -62,6 +62,7 @@ After you generate the sparql, you should display it.
 When generating sparql:
 * Never enclose the sparql in back-quotes
 
+{examples_str}
 
 Use the following format:
 
