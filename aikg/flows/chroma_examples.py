@@ -117,8 +117,7 @@ def chroma_build_examples_flow(
     embed_counter = 0
     for batch in chunked(docs, chroma_cfg.batch_size):
         embed_counter += len(batch)
-        for doc in batch:
-            index_batch(doc)
+        index_batch(docs)
     logger.info(f"Indexed {embed_counter} items.")
 
 

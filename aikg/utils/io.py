@@ -51,8 +51,5 @@ def parse_sparql_example(example: TextIO) -> List[Document]:
     # Extracting the SPARQL query from the remaining lines
     sparql_query = "\n".join(lines[1:])
     # Create example document for the output
-    example_doc = []
-    example_doc.append(
-        Document(page_content=question, metadata={"query": sparql_query})
-    )
+    example_doc = Document(page_content=question, metadata={"query": sparql_query})
     return example_doc
