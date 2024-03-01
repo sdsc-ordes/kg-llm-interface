@@ -151,10 +151,6 @@ def get_subjects_docs(
     )
     docs = []
 
-    # Skipping header row
-    if isinstance(kg, SPARQLWrapper):
-        results = results[1:]
-
     for sub, label, comment in results:
         if comment is None:
             comment = ""

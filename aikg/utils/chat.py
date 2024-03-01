@@ -56,7 +56,11 @@ def post_process_answer(answer: str) -> str:
 
 
 def generate_sparql(
-    question: str, collection: Collection, llm_chain: LLMChain, limit: int = 5
+    question: str,
+    collection: Collection,
+    llm_chain: LLMChain,
+    examples: str = "",
+    limit: int = 5,
 ) -> str:
     """Retrieve k-nearest documents from the vector store and synthesize
     SPARQL query."""
@@ -67,8 +71,35 @@ def generate_sparql(
     triples = "\n".join([res.get("triples", "") for res in results["metadatas"][0]])
     # Convert to turtle for better readability and fewer tokens
     triples = Graph().parse(data=triples).serialize(format="turtle")
-    query = llm_chain.run(question_str=question, context_str=triples)
+    query = llm_chain.run(
+        question_str=question, context_str=triples, examples_str=examples
+    )
     return query
+
+
+def generate_examples(
+    question: str,
+    collection: Collection,
+    limit: int = 5,
+) -> str:
+    """Retrieve k-nearest questions from the examples in the vector store and return them
+    together with their correponding query."""
+
+    # Retrieve documents and triples from top k subjects
+    examples = collection.query(query_texts=question, n_results=limit)
+    # Extract relevant information from dict
+    example_docs = examples["documents"][0]
+    example_meta = examples["metadatas"][0]
+    #
+    example_prompt = "Examples: \n\n"
+    for doc, meta in zip(example_docs, example_meta):
+        example_prompt += f"""
+        Question:
+        {doc}
+        Query:
+        {meta['query']}
+        """
+    return example_prompt
 
 
 def generate_answer(
