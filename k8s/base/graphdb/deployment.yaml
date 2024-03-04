@@ -25,4 +25,3 @@ spec:
       - name: graphdb-home
         persistentVolumeClaim:
           claimName: graphdb-home
-
