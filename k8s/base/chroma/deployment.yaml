@@ -16,9 +16,6 @@ spec:
       containers:
       - name: kg-llm-chroma
         image: ghcr.io/chroma-core/chroma:0.4.3
-        resources:
-          limits:
-            memory: "16Gi"
         command:
         - uvicorn
         args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "log_config.yml"]
@@ -31,9 +28,9 @@ spec:
         - containerPort: 0
           name: chroma-port
         volumeMounts:
-        - name: index-data
+        - name: chroma-index-data
           mountPath: /index_data
       volumes:
-      - name: index-data
+      - name: chroma-index-data
         persistentVolumeClaim:
-          claimName: index-data
+          claimName: chroma-index-data
