@@ -15,6 +15,9 @@ spec:
       containers:
       - name: graphdb
         image: ontotext/graphdb:10.2.0
+        resources:
+          limits:
+            memory: "16Gi"
         ports:
         - containerPort: 0
           name: graphdb
@@ -25,4 +28,3 @@ spec:
       - name: graphdb-home
         persistentVolumeClaim:
           claimName: graphdb-home
-
