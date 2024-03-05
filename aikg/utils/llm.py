@@ -17,24 +17,8 @@
 
 import re
 
-from langchain import HuggingFacePipeline, LLMChain, PromptTemplate
+from langchain import LLMChain, PromptTemplate
 from langchain.llms.base import LLM
-
-
-def setup_llm(model_id: str, max_new_tokens: int):
-    from transformers import pipeline
-    from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-
-    tok = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id)
-    pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tok,
-        max_new_tokens=max_new_tokens,
-    )
-    llm = HuggingFacePipeline(pipeline=pipe)
-    return llm
 
 
 def setup_llm_chain(llm: LLM, prompt_template: str) -> LLMChain:

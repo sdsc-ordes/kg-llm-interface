@@ -16,10 +16,7 @@
 # limitations under the License.
 
 import os
-from dataclasses import dataclass
-from pathlib import Path
 from pydantic import BaseModel
-from typing import Literal, Optional
 
 
 class ChromaConfig(BaseModel):
