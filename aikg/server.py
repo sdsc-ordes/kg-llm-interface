@@ -97,6 +97,5 @@ async def ask(question: str) -> Message:
 @app.get("/sparql/")
 async def sparql(question: str) -> Message:
     """Generate and return sparql query from question."""
-    ...
     query = generate_sparql(question, collection, sparql_chain)
     return Message(text=query, sender="AI", time=datetime.now())

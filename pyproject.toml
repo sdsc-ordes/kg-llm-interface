@@ -32,6 +32,7 @@ html5lib = "^1.1"
 anyio = "3.7.1"
 
 # local group contains dependencies to run models locally
+testcontainers = "^3.7.1"
 [tool.poetry.group.local]
 optional = true
 
