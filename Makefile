@@ -3,7 +3,6 @@
 install: ## Install with the poetry and add pre-commit hooks
 	@echo "🔨 Installing packages with poetry"
 	@poetry install
-	@poetry run poe force-cuda11
 	@poetry run pre-commit install
 
 .PHONY: check
