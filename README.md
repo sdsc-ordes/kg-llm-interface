@@ -99,4 +99,4 @@ All contributions are welcome. New functions and classes should have associated 
 
 The code formatting standard we use is [black](https://github.com/psf/black), with `--line-length=79` to follow [PEP8](https://peps.python.org/pep-0008/) recommendations. We use [pytest](https://docs.pytest.org/en/7.2.x/) as our testing framework. This project uses [pyproject.toml](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/) to define package information, requirements and tooling configuration.
 
-Tests can be executed with `make test`
+Tests can be executed with `make test`. Tests use [testcontainers](https://testcontainers.com) to temporarily deploy the required services.
