@@ -13,6 +13,9 @@ make install
 
 Configuration variables are loaded from the `.env` file or environment variables. A template configuration file is provided in `.env.example`.
 
+The chat configuration (`config.chat.ChatConfig`) uses OpenAI by default, however you can run this tool with open source LLMs using a framework such as llamafile, openllm or localGPT. When doing so, simply provide your LLM server url using `openai_url` and the model name using`model`.
+
+
 ## Quickstart
 
 You can read and run the [example notebook](aikg/notebooks/nl_sparql.ipynb) to get a quick overview of the system.
