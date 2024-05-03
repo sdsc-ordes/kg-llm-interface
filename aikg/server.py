@@ -26,8 +26,8 @@ import sys
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from langchain.llms import OpenAI
 from pathlib import Path
-from rdflib import Graph
 
 from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
@@ -58,8 +58,11 @@ collection = setup_collection(
     chroma_config.collection_name,
     chroma_config.embedding_model,
 )
-llm = setup_llm(chat_config.model_id, chat_config.max_new_tokens)
-# For now, both chains share the same model to spare memory
+llm = OpenAI(
+    model_name="text-davinci-003",
+    api_key=chat_config.openai_api_key,
+    url=chat_config.openai_url,
+)
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
 sparql_chain = setup_llm_chain(llm, chat_config.sparql_template)
 kg = setup_kg(**sparql_config.dict())
@@ -94,6 +97,5 @@ async def ask(question: str) -> Message:
 @app.get("/sparql/")
 async def sparql(question: str) -> Message:
     """Generate and return sparql query from question."""
-    ...
     query = generate_sparql(question, collection, sparql_chain)
     return Message(text=query, sender="AI", time=datetime.now())

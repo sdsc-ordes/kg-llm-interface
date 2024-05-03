@@ -13,6 +13,9 @@ make install
 
 Configuration variables are loaded from the `.env` file or environment variables. A template configuration file is provided in `.env.example`.
 
+The chat configuration (`config.chat.ChatConfig`) uses OpenAI by default, however you can run this tool with open source LLMs using a framework such as llamafile, openllm or localGPT. When doing so, simply provide your LLM server url using `openai_url` and the model name using`model`.
+
+
 ## Quickstart
 
 You can read and run the [example notebook](aikg/notebooks/nl_sparql.ipynb) to get a quick overview of the system.
@@ -96,4 +99,4 @@ All contributions are welcome. New functions and classes should have associated 
 
 The code formatting standard we use is [black](https://github.com/psf/black), with `--line-length=79` to follow [PEP8](https://peps.python.org/pep-0008/) recommendations. We use [pytest](https://docs.pytest.org/en/7.2.x/) as our testing framework. This project uses [pyproject.toml](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/) to define package information, requirements and tooling configuration.
 
-Tests can be executed with `make test`
+Tests can be executed with `make test`. Tests use [testcontainers](https://testcontainers.com) to temporarily deploy the required services.
