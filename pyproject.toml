@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "aikg"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 tqdm = "^4.65.0"
 #torch = { url = "https://download.pytorch.org/whl/cpu/torch-2.0.1%2Bcpu-cp310-cp310-linux_x86_64.whl"}
 python-dotenv = "^1.0.0"
