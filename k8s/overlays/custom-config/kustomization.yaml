@@ -6,6 +6,7 @@ resources:
 
 configMapGenerator:
 - name: custom-config
+  namespace: kg-llm
   envs:
   - params.env
 

@@ -9,6 +9,7 @@ resources:
 
 configMapGenerator:
 - name: graphdb-config
+  namespace: kg-llm
   envs:
   - params.env
 
