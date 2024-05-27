@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kg-llm
+  namespace: kg-llm
 spec:
   replicas: 1
   selector:
@@ -15,7 +16,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: kg-llm-container
-        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest 
+        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         env:
         - name: CHROMA_HOST
           value: "servicename.servicenamespace.svc.cluster.local"
@@ -25,7 +26,7 @@ spec:
         - containerPort: 80
       initContainers:
       - name: graphdb-upload-container
-        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest 
+        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
@@ -53,7 +54,7 @@ spec:
           - configMapRef:
               name: kg-llm-config
       - name: chromadb-upload-container
-        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest 
+        image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
@@ -85,4 +86,3 @@ spec:
       - name: configmap-kg-llm
         configMap:
           name: kg-llm-config
-
