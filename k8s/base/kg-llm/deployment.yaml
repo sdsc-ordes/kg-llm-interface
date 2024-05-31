@@ -30,10 +30,8 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            set -e;
             cd /app;
-            echo curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl;
-            curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl;
+            curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
             export SPARQL_ENDPOINT=http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/repositories/test;
             mkdir temp;
             cd temp;
@@ -64,7 +62,8 @@ spec:
             cd temp;
             wget -O ontology.nt ${ONTOLOGY};
             cd ..;
-            poetry run python3 aikg/flows/chroma_build.py;
+            echo "endpoint: temp/ontology.nt" > ontology.yaml 
+            poetry run python3 aikg/flows/chroma_build.py ontology.yaml; 
         envFrom:
           - configMapRef:
               name: chroma-db-config
