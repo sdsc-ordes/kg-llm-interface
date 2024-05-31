@@ -4,11 +4,12 @@ kind: Kustomization
 resources:
 - deployment.yaml
 - service.yaml
-- configmaps.yaml
-- pvcs.yaml
+- configmap.yaml
+- pvc.yaml
 
 configMapGenerator:
 - name: chroma-db-config
+  namespace: kg-llm
   envs:
   - params.env
 

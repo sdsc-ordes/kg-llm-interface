@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from pathlib import Path
+import os
 from pydantic import BaseModel
-from typing import Literal, Optional
 
 
 class ChatConfig(BaseModel):
@@ -33,12 +31,9 @@ class ChatConfig(BaseModel):
         prompt_template: The template for the prompt to inject into the model. The template should contain the following variables: context_str, query_str.
     """
 
-    model_id: str = "huggyllama/llama-7b"
-    max_new_tokens: int = 48
-    max_input_size: int = 2048
-    num_output: int = 256
-    max_chunk_overlap: int = 20
-
+    openai_url: str = os.environ.get("OPENAI_URL", "https://api.openai.com/v1/")
+    openai_api_key: str = os.environ.get("OPENAI_API_KEY", "")
+    model: str = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
     answer_template: str = """
 We have provided the contextual facts below.
 -----------------

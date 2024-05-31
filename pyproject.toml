@@ -10,12 +10,10 @@ packages = [{include = "aikg"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 tqdm = "^4.65.0"
-transformers = "^4.28.1"
-torch = { url = "https://download.pytorch.org/whl/cpu/torch-2.0.1%2Bcpu-cp310-cp310-linux_x86_64.whl"}
+#torch = { url = "https://download.pytorch.org/whl/cpu/torch-2.0.1%2Bcpu-cp310-cp310-linux_x86_64.whl"}
 python-dotenv = "^1.0.0"
 ipykernel = "^6.22.0"
 rdflib = "6.3.0"
-sentence-transformers = "^2.2.2"
 chromadb = "^0.4.22"
 more-itertools = "^9.1.0"
 prefect = "^2.10.6"
@@ -32,6 +30,15 @@ openai = "^0.27.8"
 poethepoet = "^0.21.0"
 html5lib = "^1.1"
 anyio = "3.7.1"
+
+# local group contains dependencies to run models locally
+testcontainers = "^3.7.1"
+[tool.poetry.group.local]
+optional = true
+
+[tool.poetry.group.local.dependencies]
+sentence-transformers = "^2.2.2"
+transformers = "^4.28.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

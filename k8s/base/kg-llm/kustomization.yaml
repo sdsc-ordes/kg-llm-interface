@@ -4,9 +4,11 @@ kind: Kustomization
 resources:
   - deployment.yaml
   - service.yaml
+  - pvc.yaml
 
 configMapGenerator:
 - name: kg-llm-config
+  namespace: kg-llm
   envs:
   - params.env
 
@@ -50,4 +52,3 @@ replacements:
       name: kg-llm
     fieldPaths:
     - spec.template.spec.containers.[name=kg-llm-container].env.[name=CHROMA_PORT].value
-
