@@ -16,8 +16,10 @@
 # limitations under the License.
 
 import requests
+import os
 from pathlib import Path
-
+from typing import List, TextIO
+from langchain.schema import Document
 from tqdm import tqdm
 
 
@@ -31,3 +33,23 @@ def download_file(url: str, output_path: str | Path):
         for chunk in tqdm(response.iter_content(chunk_size=8192)):
             if chunk:
                 f.write(chunk)
+
+
+def parse_sparql_example(example: TextIO) -> List[Document]:
+    """
+    Parse a text stream as input with first line being a question (starting with #)
+    and the remaining lines being a (SPARQL) query. We reformat this content into a document
+    where the page content is the question and the query is attached as metadata
+    """
+    # Create temp variable to process text stream
+    example_temp = []
+    example_temp.append(example.read())
+    # Splitting the file content into lines
+    lines = example_temp[0].split("\n")
+    # Extracting the question (removing '#' from the first line)
+    question = lines[0].strip()[1:]
+    # Extracting the SPARQL query from the remaining lines
+    sparql_query = "\n".join(lines[1:])
+    # Create example document for the output
+    example_doc = Document(page_content=question, metadata={"query": sparql_query})
+    return example_doc
