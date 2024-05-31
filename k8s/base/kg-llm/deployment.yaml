@@ -45,7 +45,7 @@ spec:
             poetry run python3 aikg/flows/insert_triples.py /app/temp/ontology.nt;
             poetry run python3 aikg/flows/insert_triples.py /app/temp/sample.nq;
         volumeMounts:
-          - name: graphdb-config-pvc
+          - name: configmap-graphdb-repo
             mountPath: /app/graphdb_config.ttl
             subPath: graphdb_config.ttl
         envFrom:
@@ -71,9 +71,6 @@ spec:
           - configMapRef:
               name: kg-llm-config
       volumes:
-      - name: graphdb-config-pvc
-        persistentVolumeClaim:
-          claimName: graphdb-config-pvc
       - name: configmap-graphdb
         configMap:
           name: graphdb-config
