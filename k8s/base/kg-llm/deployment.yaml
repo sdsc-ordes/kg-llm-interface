@@ -69,8 +69,8 @@ spec:
           cd temp;
           wget -O ontology.nt ${ONTOLOGY};
           cd ..;
-          echo "endpoint: temp/ontology.nt" > ontology.yaml 
-          poetry run python3 aikg/flows/chroma_build.py --sparql-cfg-path ontology.yaml; 
+          echo "endpoint: temp/ontology.nt" > ontology.yaml
+          poetry run python3 aikg/flows/chroma_build.py --sparql-cfg-path ontology.yaml;
         env:
         - name: CHROMA_HOST
           value: chroma_host_placeholder
