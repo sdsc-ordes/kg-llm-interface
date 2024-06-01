@@ -18,6 +18,10 @@ spec:
       - name: kg-llm-container
         image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         env:
+        - name: GRAPHDB_HOST
+          value: "servicename.servicenamespace.svc.cluster.local"
+        - name: GRAPHDB_PORT
+          value: "0"
         - name: CHROMA_HOST
           value: "servicename.servicenamespace.svc.cluster.local"
         - name: CHROMA_PORT
@@ -29,56 +33,54 @@ spec:
         image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         command: ["/bin/sh", "-c"]
         args:
-          - |
-            cd /app;
-            curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
-            export SPARQL_ENDPOINT=http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/repositories/test;
-            mkdir temp;
-            cd temp;
-            wget -O ontology.nt ${ONTOLOGY};
-            wget -O data.nq.gz ${DATA};
-            gzip -d data.nq.gz;
-            head -n 1000 data.nq > sample.nq;
-            cd ..;
-            poetry run python3 aikg/flows/insert_triples.py /app/temp/ontology.nt;
-            poetry run python3 aikg/flows/insert_triples.py /app/temp/sample.nq;
+        - |
+          cd /app;
+          curl -v -u admin:admin -X POST http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
+          export SPARQL_ENDPOINT=http://${GRAPHDB_HOST}:${GRAPHDB_PORT}/repositories/test;
+          mkdir temp;
+          cd temp;
+          wget -O ontology.nt ${ONTOLOGY};
+          wget -O data.nq.gz ${DATA};
+          gzip -d data.nq.gz;
+          head -n 1000 data.nq > sample.nq;
+          cd ..;
+          poetry run python3 aikg/flows/insert_triples.py /app/temp/ontology.nt;
+          poetry run python3 aikg/flows/insert_triples.py /app/temp/sample.nq;
         volumeMounts:
-          - name: configmap-graphdb-repo
-            mountPath: /app/graphdb_config.ttl
-            subPath: graphdb_config.ttl
+        - name: graphdb-repo-config-volume
+          mountPath: /app/graphdb_config.ttl
+          subPath: graphdb_config.ttl
+        env:
+        - name: GRAPHDB_HOST
+          value: graphdb_host_placeholder
+        - name: GRAPHDB_PORT
+          value: graphdb_port_placeholder
         envFrom:
-          - configMapRef:
-              name: graphdb-config
-          - configMapRef:
-              name: kg-llm-config
-      - name: chromadb-upload-container
+        - configMapRef:
+            name: kg-llm-config
+      - name: chroma-upload-container
         image: ghcr.io/sdsc-ordes/kg-llm-interface:latest
         command: ["/bin/sh", "-c"]
         args:
-          - |
-            set -e;
-            cd /app;
-            mkdir temp;
-            cd temp;
-            wget -O ontology.nt ${ONTOLOGY};
-            cd ..;
-            echo "endpoint: temp/ontology.nt" > ontology.yaml 
-            poetry run python3 aikg/flows/chroma_build.py ontology.yaml; 
+        - |
+          set -e;
+          cd /app;
+          mkdir temp;
+          cd temp;
+          wget -O ontology.nt ${ONTOLOGY};
+          cd ..;
+          echo "endpoint: temp/ontology.nt" > ontology.yaml 
+          poetry run python3 aikg/flows/chroma_build.py --sparql-cfg-path ontology.yaml; 
+        env:
+        - name: CHROMA_HOST
+          value: chroma_host_placeholder
+        - name: CHROMA_PORT
+          value: chroma_port_placeholder
         envFrom:
-          - configMapRef:
-              name: chroma-db-config
-          - configMapRef:
-              name: kg-llm-config
+        - configMapRef:
+            name: kg-llm-config
+
       volumes:
-      - name: configmap-graphdb
-        configMap:
-          name: graphdb-config
-      - name: configmap-graphdb-repo
+      - name: graphdb-repo-config-volume
         configMap:
           name: graphdb-repo-config
-      - name: configmap-chromadb
-        configMap:
-          name: chroma-db-config
-      - name: configmap-kg-llm
-        configMap:
-          name: kg-llm-config
