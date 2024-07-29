@@ -60,3 +60,13 @@ replacements:
     fieldPaths:
     - spec.template.spec.containers.[name=kg-llm-container].env.[name=CHROMA_PORT].value
     - spec.template.spec.initContainers.[name=chroma-upload-container].env.[name=CHROMA_PORT].value
+- source:
+    kind: ConfigMap
+    name: kg-llm-config
+    fieldPath: data.OPENAI_API_KEY
+  targets:
+  - select:
+      kind: Deployment
+      name: kg-llm
+    fieldPaths:
+    - spec.template.spec.containers.[name=kg-llm-container].env.[name=OPENAI_API_KEY].value

@@ -26,6 +26,8 @@ spec:
           value: "servicename.servicenamespace.svc.cluster.local"
         - name: CHROMA_PORT
           value: "0"
+        - name: OPENAI_API_KEY
+          value: "0"
         ports:
         - containerPort: 80
       initContainers:
