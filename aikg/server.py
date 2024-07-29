@@ -60,7 +60,7 @@ collection = setup_collection(
 )
 
 llm = OpenAI(
-    model_name="text-davinci-003",
+    model_name="gpt-3.5-turbo-instruct",
     api_key=chat_config.openai_api_key,
     url=chat_config.openai_url,
 )
