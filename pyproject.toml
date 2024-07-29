@@ -10,6 +10,7 @@ packages = [{include = "aikg"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 tqdm = "^4.65.0"
+sentence-transformers = "^2.2.2"
 python-dotenv = "^1.0.0"
 ipykernel = "^6.22.0"
 rdflib = "6.3.0"
@@ -36,7 +37,6 @@ testcontainers = "^3.7.1"
 optional = true
 
 [tool.poetry.group.local.dependencies]
-sentence-transformers = "^2.2.2"
 transformers = "^4.28.1"
 
 [tool.poetry.group.dev.dependencies]

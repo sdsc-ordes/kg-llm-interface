@@ -16,9 +16,8 @@
 # limitations under the License.
 
 import requests
-import os
 from pathlib import Path
-from typing import List, TextIO
+from typing import TextIO
 from langchain.schema import Document
 from tqdm import tqdm
 
@@ -35,7 +34,7 @@ def download_file(url: str, output_path: str | Path):
                 f.write(chunk)
 
 
-def parse_sparql_example(example: TextIO) -> List[Document]:
+def parse_sparql_example(example: TextIO) -> Document:
     """
     Parse a text stream as input with first line being a question (starting with #)
     and the remaining lines being a (SPARQL) query. We reformat this content into a document
