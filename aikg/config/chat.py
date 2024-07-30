@@ -33,7 +33,7 @@ class ChatConfig(BaseModel):
 
     openai_url: str = os.environ.get("OPENAI_URL", "https://api.openai.com/v1/")
     openai_api_key: str = os.environ.get("OPENAI_API_KEY", "")
-    model: str = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo-instruct")
+    model: str = os.environ.get("OPENAI_MODEL", "gpt-4o")
     answer_template: str = """
 We have provided the contextual facts below.
 -----------------
