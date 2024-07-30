@@ -25,7 +25,7 @@ spec:
         - name: GRAPHDB_REPO
           value: "test"
         - name: SPARQL_ENDPOINT
-          value: "$(GRAPHDB_HOST):$(GRAPHDB_PORT)/repositories/$(GRAPHDB_REPO)"
+          value: "http://$(GRAPHDB_HOST):$(GRAPHDB_PORT)/repositories/$(GRAPHDB_REPO)"
         - name: CHROMA_HOST
           value: "servicename.servicenamespace.svc.cluster.local"
         - name: CHROMA_PORT
