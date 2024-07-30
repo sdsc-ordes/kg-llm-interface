@@ -26,7 +26,7 @@ import sys
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from pathlib import Path
 
 from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
@@ -59,10 +59,10 @@ collection = setup_collection(
     chroma_config.embedding_model,
 )
 
-llm = OpenAI(
-    model_name="gpt-3.5-turbo-instruct",
-    api_key=chat_config.openai_api_key,
-    base_url=chat_config.openai_url,
+llm = ChatOpenAI(
+    model_name=chat_config.model,
+    openai_api_key=chat_config.openai_api_key,
+    openai_base=chat_config.openai_url,
 )
 
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
@@ -90,7 +90,7 @@ async def ask(question: str) -> Message:
     """Generate sparql query from question
     and execute query on kg and return an answer based on results."""
     ...
-    query = generate_sparql(question, collection, sparql_chain)
+    query = generate_sparql(question, collection, sparql_chain, limit=15)
     results = query_kg(kg, query)
     answer = generate_answer(question, query, results, answer_chain)
     return Message(text=answer, sender="AI", time=datetime.now())
