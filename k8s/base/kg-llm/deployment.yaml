@@ -41,8 +41,8 @@ spec:
         args:
         - |
           cd /app;
-          curl -v -u admin:admin -X POST ${GRAPHDB_SERVICE_NAME}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
-          export SPARQL_ENDPOINT=${GRAPHDB_HOST}:${GRAPHDB_PORT}/repositories/test;
+          curl -v -u admin:admin -X POST http://${GRAPHDB_HOST}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
+          export SPARQL_ENDPOINT="http://${GRAPHDB_HOST}:${GRAPHDB_PORT}/repositories/test";
           mkdir temp;
           cd temp;
           wget -O ontology.nt ${ONTOLOGY};
