@@ -62,7 +62,7 @@ collection = setup_collection(
 llm = OpenAI(
     model_name="gpt-3.5-turbo-instruct",
     api_key=chat_config.openai_api_key,
-    url=chat_config.openai_url,
+    base_url=chat_config.openai_url,
 )
 
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
