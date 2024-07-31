@@ -41,17 +41,14 @@ spec:
         args:
         - |
           cd /app;
+          # setup graphdb
           curl -v -u admin:admin -X POST http://${GRAPHDB_HOST}:${GRAPHDB_PORT}/rest/repositories -H 'Content-Type: multipart/form-data' -F config=@/app/graphdb_config.ttl || true;
           export SPARQL_ENDPOINT="http://${GRAPHDB_HOST}:${GRAPHDB_PORT}/repositories/test";
-          mkdir temp;
-          cd temp;
-          wget -O ontology.nt ${ONTOLOGY};
-          wget -O data.nq.gz ${DATA};
-          gzip -d data.nq.gz;
-          head -n 1000 data.nq > sample.nq;
-          cd ..;
-          poetry run python3 aikg/flows/insert_triples.py /app/temp/ontology.nt;
-          poetry run python3 aikg/flows/insert_triples.py /app/temp/sample.nq;
+          # download and uncompress nq.gz instance data
+          wget -O - ${DATA} | gzip -dc > sample.nq;
+          # download nt ontology and inject named graph -> combine with instance as nq
+          wget -O - ${ONTOLOGY} | sed 's|^\(.*\) \.|\1 <https://www.pokemonkg.org/ontology/> .|' >> sample.nq ;
+          poetry run python3 aikg/flows/insert_triples.py /app/sample.nq;
         volumeMounts:
         - name: graphdb-repo-config-volume
           mountPath: /app/graphdb_config.ttl
@@ -71,11 +68,8 @@ spec:
         - |
           set -e;
           cd /app;
-          mkdir temp;
-          cd temp;
           wget -O ontology.nt ${ONTOLOGY};
-          cd ..;
-          echo "endpoint: temp/ontology.nt" > ontology.yaml
+          echo "endpoint: ontology.nt" > ontology.yaml
           poetry run python3 aikg/flows/chroma_build.py --sparql-cfg-path ontology.yaml;
         env:
         - name: CHROMA_HOST
