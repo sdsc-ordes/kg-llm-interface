@@ -54,7 +54,10 @@ def setup_sparql_endpoint(
 
 @task
 def insert_triples(
-    rdf_file: Path, endpoint: SPARQLWrapper, graph: Optional[str] = None
+    rdf_file: Path,
+    endpoint: SPARQLWrapper,
+    graph: Optional[str] = None,
+    chunk_size: int = 1000,
 ):
     """Insert triples from source file into SPARQL endpoint.
 
@@ -67,20 +70,27 @@ def insert_triples(
     graph:
         URI of named graph to load RDF data into.
         If set to None, the default graph is used.
+    chunk_size:
+        Number of triples per insert operation.
     """
     from rdflib import Dataset
+    from rdflib.util import guess_format
+
+    format = guess_format(str(rdf_file))
+    if format not in ["nt", "nquads"]:
+        raise ValueError("Unsupported RDF format, must be ntriples or nquads.")
 
     cur = 0
     tot = os.path.getsize(rdf_file)
     with open(rdf_file, "r", encoding="utf-8") as source:
-        # Run INSERT DATA queries by chunks of 10k triples
+        # Run INSERT DATA queries by chunks of triples
         while True:
-            data = "".join([source.readline() for _ in range(1000)])
+            data = "".join([source.readline() for _ in range(chunk_size)])
             if data == "":
                 break
 
             ds = Dataset()
-            ds.parse(data=data, format="nquads")
+            ds.parse(data=data, format=format)
 
             query = "\n".join(
                 [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in ds.namespaces()]
@@ -124,8 +134,9 @@ def sparql_insert_flow(
     sparql = setup_sparql_endpoint(
         sparql_cfg.endpoint, sparql_cfg.user, sparql_cfg.password
     )
-    logger.info("INFO SPARQL endpoint connected")
+    logger.info("SPARQL endpoint connected")
     insert_triples(rdf_file, sparql, graph)
+    logger.info("all triples inserted")
 
 
 def cli(
