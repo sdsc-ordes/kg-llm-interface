@@ -16,6 +16,7 @@
 # limitations under the License.
 
 """This flow populates a SPARQL endpoint from RDF data in a file."""
+import os
 from pathlib import Path
 from typing import Optional
 from typing_extensions import Annotated
@@ -69,26 +70,37 @@ def insert_triples(
     """
     from rdflib import Dataset
 
-    data = Dataset()
-    data.parse(rdf_file)
+    cur = 0
+    tot = os.path.getsize(rdf_file)
+    with open(rdf_file, "r", encoding="utf-8") as source:
+        # Run INSERT DATA queries by chunks of 10k triples
+        while True:
+            data = "".join([source.readline() for _ in range(1000)])
+            if data == "":
+                break
 
-    query = "\n".join(
-        [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()]
-    )
-    query += f"\nINSERT DATA {{"
-    if graph:
-        query += f"\n\tGRAPH <{graph}> {{"
-    query += " .\n".join(
-        [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in data.quads()]
-    )
-    if graph:
-        query += f"\n\t}}"
-    query += f" . \n\n}}\n"
-    endpoint.setQuery(query)
-    endpoint.queryType = "INSERT"
-    endpoint.method = "POST"
-    endpoint.setReturnFormat("json")
-    endpoint.query()
+            ds = Dataset()
+            ds.parse(data=data, format="nquads")
+
+            query = "\n".join(
+                [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in ds.namespaces()]
+            )
+            query += f"\nINSERT DATA {{"
+            if graph:
+                query += f"\n\tGRAPH <{graph}> {{"
+            query += " .\n".join(
+                [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in ds.quads()]
+            )
+            if graph:
+                query += f"\n\t}}"
+            query += f" . \n\n}}\n"
+            endpoint.setQuery(query)
+            endpoint.queryType = "INSERT"
+            endpoint.method = "POST"
+            endpoint.setReturnFormat("json")
+            endpoint.query()
+            cur += len(data.encode("utf-8"))
+            print(f"inserted triples: {round(100 * cur / tot, 2)}%")
 
 
 @flow
