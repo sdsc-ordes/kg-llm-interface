@@ -31,7 +31,9 @@ class ChatConfig(BaseModel):
         prompt_template: The template for the prompt to inject into the model. The template should contain the following variables: context_str, query_str.
     """
 
-    openai_url: str = os.environ.get("OPENAI_URL", "https://api.openai.com/v1/")
+    openai_api_base: str = os.environ.get(
+        "OPENAI_API_BASE", "https://api.openai.com/v1/"
+    )
     openai_api_key: str = os.environ.get("OPENAI_API_KEY", "")
     model: str = os.environ.get("OPENAI_MODEL", "gpt-4o")
     answer_template: str = """

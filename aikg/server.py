@@ -62,7 +62,7 @@ collection = setup_collection(
 llm = ChatOpenAI(
     model_name=chat_config.model,
     openai_api_key=chat_config.openai_api_key,
-    openai_api_base=chat_config.openai_url,
+    openai_api_base=chat_config.openai_api_base,
 )
 
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
