@@ -132,18 +132,15 @@ def chroma_build_flow(
 def cli(
     chroma_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(default=None, help="YAML file with Chroma client configuration."),
+        typer.Option(help="YAML file with Chroma client configuration."),
     ] = None,
     sparql_cfg_path: Annotated[
         Optional[Path],
-        typer.Option(
-            default=None, help="YAML file with SPARQL endpoint configuration."
-        ),
+        typer.Option(help="YAML file with SPARQL endpoint configuration."),
     ] = None,
     graph: Annotated[
         Optional[str],
         typer.Option(
-            default=None,
             help="URI of named graph from which to select triples to embed. If not set, the default graph is used.",
         ),
     ] = None,

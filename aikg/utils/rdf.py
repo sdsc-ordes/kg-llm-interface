@@ -75,6 +75,16 @@ GROUP BY ?s ?sCom
 """
 
 
+def is_uri(uri: str):
+    """Checks if input is a valid URI."""
+
+    try:
+        result = urlparse(uri)
+        return all([result.scheme, result.netloc])
+    except AttributeError:
+        return False
+
+
 def make_graph_mask(graph: Optional[str] = None) -> str:
     if graph:
         return f"FILTER EXISTS {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}"
@@ -88,8 +98,7 @@ def setup_kg(
     """Try to connect to SPARQL endpoint. If not a URL, attempt
     to parse RDF file with rdflib."""
 
-    url = urlparse(endpoint)
-    if url.scheme and url.netloc:
+    if is_uri(endpoint):
         kg = SPARQLWrapper(endpoint)
         kg.setReturnFormat(CSV)
         if user and password:
@@ -125,15 +134,17 @@ def split_documents_from_endpoint(
     # Query results contain 6 columns:
     # subject, predicate, object, subject label, predicate label, object label
     results = query_kg(kg, TRIPLE_LABEL_QUERY.format(lang="en", graph_mask=graph_mask))
+    # skip header if present
+    if not is_uri(results[0][0]):
+        results = results[1:]
     # Exclude empty / incomplete results (e.g. missing labels)
     results = filter(lambda x: len(list(x)) == 6, results)
-    next(results)  # skip header
     results = sorted(results, key=lambda x: x[0])[1:]
     # Yield triples and text by subject
     for k, g in groupby(results, lambda x: x[0]):
         # Original triples about subject k
         data = list(g)
-        triples = "\n".join([f"<{s}> <{p}> <{o}>" for s, p, o, sl, pl, ol in data])
+        triples = "\n".join([f"<{s}> <{p}> <{o}>" for s, p, o, _, _, _ in data])
         # Human-readable "triples" about subject k
         doc = "\n".join([" ".join(elem[3:]) for elem in data])
         yield Document(page_content=doc, metadata={"subject": k, "triples": triples})
@@ -150,13 +161,14 @@ def get_subjects_docs(
         kg, SUBJECT_DOC_QUERY.format(lang="en", graph_mask=make_graph_mask(graph))
     )
     docs = []
+    # skip header if present
+    if not is_uri(results[0][0]):
+        results = results[1:]
 
     for sub, label, comment in results:
-        if comment is None:
-            comment = ""
         text = f"""
         {label}
-        {comment}
+        {comment or ''}
         """
         triples = query_kg(kg, f"DESCRIBE <{sub}>")
 

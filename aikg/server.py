@@ -26,14 +26,14 @@ import sys
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from pathlib import Path
 
 from aikg.config import ChatConfig, ChromaConfig, SparqlConfig
 from aikg.config.common import parse_yaml_config
 from aikg.models import Conversation, Message
 from aikg.utils.chat import generate_answer, generate_examples, generate_sparql
-from aikg.utils.llm import setup_llm_chain, setup_llm
+from aikg.utils.llm import setup_llm_chain
 from aikg.utils.chroma import setup_collection, setup_client
 from aikg.utils.rdf import setup_kg, query_kg
 
@@ -59,10 +59,10 @@ collection = setup_collection(
     chroma_config.embedding_model,
 )
 
-llm = OpenAI(
-    model_name="text-davinci-003",
-    api_key=chat_config.openai_api_key,
-    url=chat_config.openai_url,
+llm = ChatOpenAI(
+    model_name=chat_config.model,
+    openai_api_key=chat_config.openai_api_key,
+    openai_api_base=chat_config.openai_api_base,
 )
 
 answer_chain = setup_llm_chain(llm, chat_config.answer_template)
@@ -81,7 +81,7 @@ def index():
 
 
 @app.get("/test/")
-async def test(question: str) -> Message:
+async def test() -> Message:
     return Message(text="Hello, world!", sender="AI", time=datetime.now())
 
 
@@ -90,19 +90,10 @@ async def ask(question: str) -> Message:
     """Generate sparql query from question
     and execute query on kg and return an answer based on results."""
     ...
-    query = generate_sparql(question, collection, sparql_chain)
+    query = generate_sparql(question, collection, sparql_chain, limit=15)
     results = query_kg(kg, query)
     answer = generate_answer(question, query, results, answer_chain)
     return Message(text=answer, sender="AI", time=datetime.now())
-
-
-@app.get("/examples/")
-async def ask(question: str) -> Message:
-    """Generate examples from question
-    and return examples to prompt."""
-    ...
-    examples = generate_examples(question, collection_examples, sparql_chain)
-    return Message(text=examples, sender="AI", time=datetime.now())
 
 
 @app.get("/sparql/")

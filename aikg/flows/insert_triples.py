@@ -16,6 +16,7 @@
 # limitations under the License.
 
 """This flow populates a SPARQL endpoint from RDF data in a file."""
+import os
 from pathlib import Path
 from typing import Optional
 from typing_extensions import Annotated
@@ -53,7 +54,10 @@ def setup_sparql_endpoint(
 
 @task
 def insert_triples(
-    rdf_file: Path, endpoint: SPARQLWrapper, graph: Optional[str] = None
+    rdf_file: Path,
+    endpoint: SPARQLWrapper,
+    graph: Optional[str] = None,
+    chunk_size: int = 1000,
 ):
     """Insert triples from source file into SPARQL endpoint.
 
@@ -66,29 +70,47 @@ def insert_triples(
     graph:
         URI of named graph to load RDF data into.
         If set to None, the default graph is used.
+    chunk_size:
+        Number of triples per insert operation.
     """
     from rdflib import Dataset
+    from rdflib.util import guess_format
 
-    data = Dataset()
-    data.parse(rdf_file)
+    format = guess_format(str(rdf_file))
+    if format not in ["nt", "nquads"]:
+        raise ValueError("Unsupported RDF format, must be ntriples or nquads.")
 
-    query = "\n".join(
-        [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in data.namespaces()]
-    )
-    query += f"\nINSERT DATA {{"
-    if graph:
-        query += f"\n\tGRAPH <{graph}> {{"
-    query += " .\n".join(
-        [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in data.quads()]
-    )
-    if graph:
-        query += f"\n\t}}"
-    query += f" . \n\n}}\n"
-    endpoint.setQuery(query)
-    endpoint.queryType = "INSERT"
-    endpoint.method = "POST"
-    endpoint.setReturnFormat("json")
-    endpoint.query()
+    cur = 0
+    tot = os.path.getsize(rdf_file)
+    with open(rdf_file, "r", encoding="utf-8") as source:
+        # Run INSERT DATA queries by chunks of triples
+        while True:
+            data = "".join([source.readline() for _ in range(chunk_size)])
+            if data == "":
+                break
+
+            ds = Dataset()
+            ds.parse(data=data, format=format)
+
+            query = "\n".join(
+                [f"PREFIX {prefix}: {ns.n3()}" for prefix, ns in ds.namespaces()]
+            )
+            query += f"\nINSERT DATA {{"
+            if graph:
+                query += f"\n\tGRAPH <{graph}> {{"
+            query += " .\n".join(
+                [f"\t\t{s.n3()} {p.n3()} {o.n3()}" for (s, p, o, _) in ds.quads()]
+            )
+            if graph:
+                query += f"\n\t}}"
+            query += f" . \n\n}}\n"
+            endpoint.setQuery(query)
+            endpoint.queryType = "INSERT"
+            endpoint.method = "POST"
+            endpoint.setReturnFormat("json")
+            endpoint.query()
+            cur += len(data.encode("utf-8"))
+            print(f"inserted triples: {round(100 * cur / tot, 2)}%")
 
 
 @flow
@@ -112,8 +134,9 @@ def sparql_insert_flow(
     sparql = setup_sparql_endpoint(
         sparql_cfg.endpoint, sparql_cfg.user, sparql_cfg.password
     )
-    logger.info("INFO SPARQL endpoint connected")
+    logger.info("SPARQL endpoint connected")
     insert_triples(rdf_file, sparql, graph)
+    logger.info("all triples inserted")
 
 
 def cli(

@@ -16,10 +16,10 @@ spec:
       restartPolicy: Always
       containers:
       - name: kg-llm-chroma
-        image: ghcr.io/chroma-core/chroma:0.4.3
+        image: ghcr.io/chroma-core/chroma:0.4.24
         command:
         - uvicorn
-        args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "log_config.yml"]
+        args: ["chromadb.app:app", "--reload", "--workers", "1", "--host", "0.0.0.0", "--port", $(CHROMA_PORT), "--log-config", "chromadb/log_config.yml"]
         env:
         - name: IS_PERSISTENT
           value: "true"

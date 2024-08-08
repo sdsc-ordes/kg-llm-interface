@@ -4,7 +4,7 @@ metadata:
   name: chroma-service
   namespace: kg-llm
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: chroma
   ports:

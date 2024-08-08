@@ -1,3 +1,4 @@
+IMAGE := 'ghcr.io/sdsc-ordes/kg-llm-interface:latest'
 
 .PHONY: install
 install: ## Install with the poetry and add pre-commit hooks
@@ -30,12 +31,12 @@ deploy:
 .PHONY: notebook
 notebook: docker-build ## Start a jupyter notebook server in a docker container
 	@echo "🗒️ Starting a containerized notebook server"
-	@docker run -p 8888:8888 --rm -it --entrypoint 'poetry' kg-llm-interface:latest \
+	@docker run -p 8888:8888 --rm -it --entrypoint 'poetry' $(IMAGE) \
 		run jupyter lab --allow-root --port 8888 --ip "0.0.0.0"
 
 docker-build: Dockerfile
 	@echo "🐳 Building docker image"
-	@docker build -t kg-llm-interface:latest .
+	@docker build -t $(IMAGE) .
 
 .PHONY: help
 help:

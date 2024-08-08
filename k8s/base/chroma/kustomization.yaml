@@ -8,7 +8,7 @@ resources:
 - pvc.yaml
 
 configMapGenerator:
-- name: chroma-db-config
+- name: chroma-config
   namespace: kg-llm
   envs:
   - params.env
@@ -19,7 +19,7 @@ generatorOptions:
 replacements:
 - source:
     kind: ConfigMap
-    name: chroma-db-config
+    name: chroma-config
     fieldpath: data.CHROMA_PORT
   targets:
   - select:
