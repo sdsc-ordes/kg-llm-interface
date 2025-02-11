@@ -1,53 +1,59 @@
-[tool.poetry]
+[project]
+authors = [
+    {name = "cyril.matthey-doret", email = "cyril.matthey-doret@epfl.ch"},
+]
+license = {text = "MIT"}
+requires-python = "<4.0,>=3.10"
+dependencies = [
+    "tqdm<5.0.0,>=4.65.0",
+    "sentence-transformers<3.0.0,>=2.2.2",
+    "python-dotenv<2.0.0,>=1.0.0",
+    "ipykernel<7.0.0,>=6.22.0",
+    "rdflib==6.3.0",
+    "chromadb<1.0.0,>=0.4.22",
+    "more-itertools<10.0.0,>=9.1.0",
+    "prefect<3.0.0,>=2.10.6",
+    "typer<1.0.0,>=0.9.0",
+    "bokeh==2.4.3",
+    "sparqlwrapper<3.0.0,>=2.0.0",
+    "fastapi<1.0.0,>=0.95.1",
+    "uvicorn<1.0.0,>=0.22.0",
+    "typing-extensions<5.0.0,>=4.6.3",
+    "protobuf==3.20",
+    "jupyterlab<5.0.0,>=4.0.2",
+    "langchain<1.0.0,>=0.0.230",
+    "openai<1.0.0,>=0.27.8",
+    "poethepoet<1.0.0,>=0.21.0",
+    "html5lib<2.0,>=1.1",
+    "anyio==3.7.1",
+    "testcontainers<4.0.0,>=3.7.1",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+]
 name = "aikg"
 version = "0.1.0"
 description = "Langchain-powered natural language interface to RDF knowledge-graphs"
-authors = ["cyril.matthey-doret <cyril.matthey-doret@epfl.ch>"]
-license = "MIT"
 readme = "README.md"
-packages = [{include = "aikg"}]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-tqdm = "^4.65.0"
-sentence-transformers = "^2.2.2"
-python-dotenv = "^1.0.0"
-ipykernel = "^6.22.0"
-rdflib = "6.3.0"
-chromadb = "^0.4.22"
-more-itertools = "^9.1.0"
-prefect = "^2.10.6"
-typer = "^0.9.0"
-bokeh = "2.4.3"
-sparqlwrapper = "^2.0.0"
-fastapi = "^0.95.1"
-uvicorn = "^0.22.0"
-typing-extensions = "^4.6.3"
-protobuf = "3.20"
-jupyterlab = "^4.0.2"
-langchain = "^0.0.230"
-openai = "^0.27.8"
-poethepoet = "^0.21.0"
-html5lib = "^1.1"
-anyio = "3.7.1"
+[dependency-groups]
+local = [
+    "transformers<5.0.0,>=4.28.1",
+]
+dev = [
+    "black<24.0.0,>=23.3.0",
+    "pytest<8.0.0,>=7.3.1",
+    "pre-commit<4.0.0,>=3.2.2",
+]
 
-# local group contains dependencies to run models locally
-testcontainers = "^3.7.1"
-[tool.poetry.group.local]
-optional = true
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu" },
+]
 
-[tool.poetry.group.local.dependencies]
-transformers = "^4.28.1"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-pytest = "^7.3.1"
-pre-commit = "^3.2.2"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-# Until poetry provides a better solution: https://stackoverflow.com/a/66644457/8440675
-[tool.poe.tasks]
-force-cuda11 = "python -m pip install torch torchvision -f https://download.pytorch.org/whl/cu117"
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
