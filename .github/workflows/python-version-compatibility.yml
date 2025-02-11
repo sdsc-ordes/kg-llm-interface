@@ -1,6 +1,9 @@
 name: python-version-compatibility
 
-on: pull_request
+on:
+  pull_request:
+    paths:
+      - 'pyproject.toml'
 
 jobs:
   build:

@@ -3,7 +3,7 @@ Langchain-powered natural language interface to RDF knowledge-graphs.
 
 ## Installation
 
-This repository uses poetry for package management. A Makefile rule is provided to install the dependencies:
+This repository uses `uv` for package management. A Makefile rule is provided to install the dependencies:
 
 ```bash
 make install
