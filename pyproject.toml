@@ -27,8 +27,8 @@ dependencies = [
     "html5lib<2.0,>=1.1",
     "anyio==3.7.1",
     "testcontainers<4.0.0,>=3.7.1",
-    "torch>=2.6.0",
-    "torchvision>=0.21.0",
+    "torch==2.6.0+cpu",
+    "torchvision==0.21.0+cpu",
 ]
 name = "aikg"
 version = "0.1.0"
