@@ -2,26 +2,26 @@ IMAGE := 'ghcr.io/sdsc-ordes/kg-llm-interface:latest'
 
 .PHONY: install
 install: ## Install with the poetry and add pre-commit hooks
-	@echo "🔨 Installing packages with poetry"
-	@poetry install
-	@poetry run pre-commit install
+	@echo "🔨 Installing packages with uv"
+	@uv sync
+	@uv run pre-commit install
 
 .PHONY: check
 check: ## Run code quality tools.
-	@echo "🕵️ Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check"
-	@poetry lock --check
+	@echo "🕵️ Checking Poetry lock file consistency with 'pyproject.toml': Running uv lock --check"
+	@uv lock --check
 	@echo "🕵️ Linting code: Running pre-commit"
-	@poetry run pre-commit run -a
+	@uv run pre-commit run -a
 
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🧪 Testing code: Running pytest"
-	@poetry run pytest
+	@uv run pytest
 
 .PHONY: server
 server:
 	@echo "🖥️ Running server"
-	@poetry run uvicorn --reload aikg.server:app --port 8001
+	@uv run uvicorn --reload aikg.server:app --port 8001
 
 .PHONY: deploy
 deploy:
