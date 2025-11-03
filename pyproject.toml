@@ -29,6 +29,7 @@ dependencies = [
     "testcontainers<4.0.0,>=3.7.1",
     "torch==2.6.0+cpu",
     "torchvision==0.21.0+cpu",
+    "langchain-community>=0.3.17",
 ]
 name = "aikg"
 version = "0.1.0"

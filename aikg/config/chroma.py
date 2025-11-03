@@ -38,7 +38,7 @@ class ChromaConfig(BaseModel):
             If set to client-only mode, local path where the db is saved.
     """
 
-    host: str = os.environ.get("CHROMA_HOST", "127.0.0.1")
+    host: str = os.environ.get("CHROMA_HOST", "local")
     port: int = int(os.environ.get("CHROMA_PORT", "8000"))
     collection_name: str = os.environ.get("CHROMA_COLLECTION", "schema")
     collection_examples: str = os.environ.get("CHROMA_EXAMPLES", "examples")
