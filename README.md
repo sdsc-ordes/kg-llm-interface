@@ -6,8 +6,14 @@ Langchain-powered natural language interface to RDF knowledge-graphs.
 This repository uses `uv` for package management. A Makefile rule is provided to install the dependencies:
 
 ```bash
-make install
+just setup
 ```
+
+To start the nix-based development shell (linux-only), run:
+
+```bash
+just dev
+``````
 
 ## Configuration
 

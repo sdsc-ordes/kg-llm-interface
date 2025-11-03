@@ -1,0 +1,13 @@
+on:
+  pull_request_target:
+    paths:
+      - '**.nix'
+steps:
+  - uses: actions/checkout@v3
+  - name: Install Nix
+    uses: cachix/install-nix-action@v17
+    with:
+      extra_nix_config: |
+        access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+  - name: Build dev shell
+    run: nix develop --no-pure-eval --accept-flake-config "./tools/nix" --command "bash"
